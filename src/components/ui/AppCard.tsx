@@ -10,8 +10,6 @@ export function AppCard({ style, ...props }: ViewProps) {
           backgroundColor: colors.surface,
           borderRadius: radius.card,
           padding: spacing.lg,
-          borderWidth: 1,
-          borderColor: colors.border,
         },
         style,
       ]}

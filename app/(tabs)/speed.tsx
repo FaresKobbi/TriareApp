@@ -1,7 +1,8 @@
 import { View, Text } from 'react-native'
 import React from 'react'
+import index from '..'
 
-const index = () => {
+const speed = () => {
   return (
     <View>
       <Text>index</Text>
@@ -9,4 +10,4 @@ const index = () => {
   )
 }
 
-export default index
+export default speed

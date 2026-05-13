@@ -1,3 +1,5 @@
+import { AppCard } from "../components/ui/AppCard";
+
 export const colors = {
   bg: "#EEF7F4",
   surface: "#FFFFFF",
@@ -5,8 +7,8 @@ export const colors = {
   border: "#D9EBE5",
 
   primary: "#14B8A6",
-  primaryDark: "#0E8F80",
-  primarySoft: "#CFF1EB",
+  primaryDark: "#0e9686d8",
+  primarySoft: "#bff1e8ff",
 
   success: "#22C55E",
   warning: "#F59E0B",
@@ -18,4 +20,10 @@ export const colors = {
   textLight: "#8AA39E",
 
   onPrimary: "#FFFFFF",
+
+  transparent: "transparent",
+
+  cardShadow: ""
+
+  
 };
