@@ -40,14 +40,14 @@ export function AppButton({
       onPress={onPress}
       style={({ pressed }) =>[
         {
-          backgroundColor: pressed ? colors.primarySoft : surfaceColor,
+          backgroundColor: pressed ? colors.primaryDark : surfaceColor,
           padding: spacing.xl,
           borderRadius: radius.button,
           flexDirection: "row",
           gap: spacing.xs,
           alignItems: "center",
           justifyContent: "center",
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          transform: [{ scale: pressed ? 0.95 : 1 }],
         },
         style,
         isShadowed && shadows.coloredShadow(surfaceColor) 
