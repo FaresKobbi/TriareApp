@@ -1,50 +1,66 @@
-# Welcome to your Expo app 👋
+# TRIARE
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native / Expo mobile application for controlling a motorized tricycle via Bluetooth.
+
+> **Status:** Prototype stage. Current scope includes Bluetooth connection, motor control, speed adjustment, motor stop, and pedal resistance zone configuration.
+
+---
 
 ## Get started
 
-1. Install dependencies
+### Install dependencies
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Start the development server
 
-## Learn more
+```bash
+npm start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+You can then open the app in:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- **Expo Go** — scan the QR code on your phone
+- **Android emulator** — `npm run android`
+- **iOS simulator** — `npm run ios`
+- **Web browser** — `npm run web`
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## Scripts
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+| Script | Command | Description |
+|---|---|---|
+| Start dev server | `npm start` | Starts Expo development server |
+| Android | `npm run android` | Opens app on Android emulator |
+| iOS | `npm run ios` | Opens app on iOS simulator |
+| Web | `npm run web` | Opens app in browser |
+| Lint | `npm run lint` | Runs ESLint |
+
+---
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before creating branches, commits, or pull requests.
+
+It covers:
+
+- How to set up the project
+- Branch naming conventions
+- Commit message format (Conventional Commits)
+- Pull request workflow
+- How the automated release pipeline works
+
+---
+
+## Tech stack
+
+- [React Native](https://reactnative.dev/)
+- [Expo](https://expo.dev/) (SDK 54, with New Architecture enabled)
+- [Expo Router](https://expo.github.io/router/) (file-based routing)
+- [TypeScript](https://www.typescriptlang.org/) (strict mode)
+- [semantic-release](https://semantic-release.gitbook.io/) (automated releases)
+- [Husky](https://typicode.github.io/husky/) + [commitlint](https://commitlint.js.org/) (commit validation)
