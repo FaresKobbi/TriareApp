@@ -232,7 +232,9 @@ docs: update contributing guide
 ci: configure semantic release
 ```
 
-> **Note:** The `pre-commit` hook is configured but currently empty — it does not run any checks before staging. Only the `commit-msg` hook is active (commitlint).
+> **Note:** Two Husky hooks are active on every commit:
+> - **`pre-commit`** — runs `npm run lint`. If the linter reports errors, the commit is blocked.
+> - **`commit-msg`** — runs `commitlint`. If the commit message format is invalid, the commit is blocked.
 
 ---
 
@@ -351,7 +353,15 @@ npm run lint
 
 This uses the Expo ESLint preset, which covers React Native and TypeScript best practices.
 
-> **Note:** No automatic lint check runs on commit or in CI at this time. Running `npm run lint` manually before pushing is recommended.
+> **`npm run lint` runs automatically on every commit** via the `pre-commit` Husky hook. If the linter finds errors, the commit will be blocked until you fix them.
+
+You can also run it manually at any time:
+
+```bash
+npm run lint
+```
+
+> **Note:** Lint warnings do not block commits — only errors do. However, try to keep the codebase warning-free.
 
 ### TypeScript
 
@@ -395,6 +405,26 @@ If hooks are still not running:
 npx husky
 ```
 
+### My commit was blocked by a lint error
+
+If `npm run lint` fails during a commit, the terminal will show which file and rule caused the error.
+
+Fix the reported issue, then stage the fix and retry the commit:
+
+```bash
+# Fix the issue in your editor, then:
+git add <file>
+git commit -m "fix: correct lint error in ..."
+```
+
+If you need to skip the hook temporarily (not recommended):
+
+```bash
+git commit --no-verify -m "your message"
+```
+
+> Only use `--no-verify` if you have a very good reason. It bypasses **both** the lint check and the commit message check.
+
 ### The release did not trigger
 
 - Check that you pushed or merged to `main`, not `dev`.
@@ -422,7 +452,8 @@ npm ci
 | Commit with convention | `git commit -m "feat: short description"` |
 | Push your branch | `git push origin feat/my-feature` |
 | Open a Pull Request | From your branch → `dev` on GitHub |
-| Lint check | `npm run lint` |
+| Lint check (manual) | `npm run lint` |
+| Lint check (automatic) | Runs on every `git commit` via Husky |
 | Release | Merge `dev` → `main` (automated) |
 
 **Quick commit type reference:**
