@@ -1,3 +1,5 @@
+import { colors } from "./colors";
+
 export const typography = {
   speedReadout: {
     fontSize: 72,
