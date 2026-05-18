@@ -12,7 +12,7 @@ import { AppDeviceSelector } from '@/src/components/ui/AppDeviceSelector'
 
 
 
-const index = () => {
+const Index = () => {
 
   const [devices, setDevices] = useState<Device[]>([])
 
@@ -117,7 +117,7 @@ function displayDevicesCount(devices: Device[]){
  )
 }
 
-export default index
+export default Index
 
 const styles = StyleSheet.create({
   screen : {
