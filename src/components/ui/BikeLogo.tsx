@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors, radius, shadows } from "@/src/theme";
+import { radius, shadows } from "@/src/theme";
 
 type BikeLogoProps = {
     surfaceColor : string;

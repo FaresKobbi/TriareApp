@@ -1,5 +1,5 @@
 import { Device } from "@/src/models/device";
-import { colors, radius, shadows, spacing, typography } from "@/src/theme";
+import { colors, radius, spacing, typography } from "@/src/theme";
 import {
   Pressable,
   StyleSheet,
@@ -11,7 +11,6 @@ import { BikeLogo } from "./BikeLogo";
 
 
 
-let isPressed = false;
 
 type AppDeviceSelectorProps = {
     device: Device;
