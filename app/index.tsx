@@ -91,13 +91,14 @@ const Index = () => {
         </AppCardGradient>
 
         {/*Device List*/}
+        <View style = {styles.devicesCardTitle}>
+              <Text style = {[typography.body, {color: colors.textMuted}]}>AVAILABLE DEVICES</Text>
+              {displayDevicesCount(devices)}
+        </View>
+
         <ScrollView 
           style = {styles.devicesCardContainer} 
           contentContainerStyle = {styles.devicesCardContent}>
-          <View style = {styles.devicesCardTitle}>
-              <Text style = {[typography.body, {color: colors.textMuted}]}>AVAILABLE DEVICES</Text>
-              {displayDevicesCount(devices)}
-          </View>
 
           {devices.map((device)=>(
             <AppDeviceSelector key={device.name} device={device} onPress={alert}></AppDeviceSelector>
@@ -164,9 +165,9 @@ const styles = StyleSheet.create({
   devicesCardTitle:{
     flexDirection:"row",
     alignItems:"center",
-    justifyContent:"space-between"
-
-
+    justifyContent:"space-between",
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg
   },
 
   devicesCardContainer: {
