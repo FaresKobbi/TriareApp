@@ -1,3 +1,18 @@
+# [1.1.0](https://github.com/FaresKobbi/TriareApp/compare/v1.0.0...v1.1.0) (2026-05-20)
+
+
+### Bug Fixes
+
+* correct bad index export ([7bd93ec](https://github.com/FaresKobbi/TriareApp/commit/7bd93ec451e9b518e263a3485f6243298ad07777))
+
+
+### Features
+
+* add devices list display, missing click icon and battery level ([4353c14](https://github.com/FaresKobbi/TriareApp/commit/4353c14fb02162c398d863ad0d06ecbdc2825ce5))
+* **connectionScreen:** add triare device battery status bar ([0954347](https://github.com/FaresKobbi/TriareApp/commit/09543472720268bf57349cb099fecad7de7d27ad))
+* **connectionScrenn:** add mocked device list display ([7aabc07](https://github.com/FaresKobbi/TriareApp/commit/7aabc078c37714371ca53ace73a9f01645f140e6))
+* finish connection page front, add tests and github wf for ci ([4e75b3c](https://github.com/FaresKobbi/TriareApp/commit/4e75b3c45d46fdbe025b33d71292472688a1424e))
+
 # 1.0.0 (2026-05-14)
 
 
