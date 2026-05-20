@@ -132,7 +132,7 @@ git push
 git push --set-upstream origin feat/my-feature
 ```
 
-Then open a **Pull Request from `feat/my-feature` into `dev`** on GitHub.
+Once your feature is finished, open a **Pull Request from `feat/my-feature` into `dev`** on GitHub.
 
 ---
 
@@ -183,20 +183,10 @@ revert: revert bluetooth connection screen
 
 If your change is not backward-compatible, it is a **breaking change**. Breaking changes trigger a **major version release** (`1.0.0 → 2.0.0`).
 
-You can indicate a breaking change in two ways:
-
-**Option 1 — exclamation mark after the type:**
+Indicate a breaking change with an exclamation mark after the type:
 
 ```bash
 feat!: change bluetooth command protocol
-```
-
-**Option 2 — `BREAKING CHANGE` footer in the commit body:**
-
-```
-feat: change bluetooth command protocol
-
-BREAKING CHANGE: the command frame format is no longer compatible with previous versions.
 ```
 
 ### How commits affect the version
@@ -205,7 +195,7 @@ BREAKING CHANGE: the command frame format is no longer compatible with previous 
 |---|---|---|
 | `fix` | Patch | `1.0.0 → 1.0.1` |
 | `feat` | Minor | `1.0.0 → 1.1.0` |
-| `feat!` or `BREAKING CHANGE` | Major | `1.0.0 → 2.0.0` |
+| `feat!` | Major | `1.0.0 → 2.0.0` |
 | `docs`, `style`, `chore`, `test`, `ci`, `refactor` | None | No release |
 
 ### Commit validation (Husky + commitlint)
@@ -233,7 +223,7 @@ ci: configure semantic release
 ```
 
 > **Note:** Two Husky hooks are active on every commit:
-> - **`pre-commit`** — runs `npm run lint`. If the linter reports errors, the commit is blocked.
+> - **`pre-commit`** — runs `npm run lint` and `npm test`. If the linter reports errors or any test fails, the commit is blocked.
 > - **`commit-msg`** — runs `commitlint`. If the commit message format is invalid, the commit is blocked.
 
 ---
@@ -246,7 +236,8 @@ ci: configure semantic release
 4. Add a description explaining what the PR does and why.
 5. Request a review from a team member.
 6. Address any review feedback by pushing additional commits to the same branch.
-7. Once approved, the PR can be merged into `dev`.
+7. Wait for the **`CI - PR`** workflow to pass (runs linting and all tests automatically).
+8. Once approved and the CI is green, the PR can be merged into `dev`.
 
 ### PR title convention
 
@@ -293,8 +284,9 @@ When `dev` is stable and the team is ready for a release:
 1. Open a Pull Request from `dev` into `main`.
 2. Set the PR title to a Conventional Commits message that reflects the scope of the release (e.g., `feat: release bluetooth control feature`).
 3. Review and approve the PR.
-4. Merge into `main`, keeping the PR title as the merge commit message.
-5. The automated release pipeline runs automatically (see [Release workflow](#release-workflow)).
+4. Wait for the **`CI - PR`** workflow to pass before merging.
+5. Merge into `main`, keeping the PR title as the merge commit message.
+6. The automated release pipeline runs automatically (see [Release workflow](#release-workflow)).
 
 ---
 
@@ -345,15 +337,7 @@ The workflow uses the built-in `GITHUB_TOKEN` secret, which is automatically ava
 
 The project uses **ESLint** with the [`eslint-config-expo`](https://docs.expo.dev/guides/using-eslint/) configuration.
 
-Run the linter with:
-
-```bash
-npm run lint
-```
-
-This uses the Expo ESLint preset, which covers React Native and TypeScript best practices.
-
-> **`npm run lint` runs automatically on every commit** via the `pre-commit` Husky hook. If the linter finds errors, the commit will be blocked until you fix them.
+> **`npm run lint` and `npm test` run automatically on every commit** via the `pre-commit` Husky hook. If the linter finds errors or a test fails, the commit will be blocked until you fix them.
 
 You can also run it manually at any time:
 
@@ -371,7 +355,24 @@ The project uses TypeScript with strict mode enabled (`"strict": true` in `tscon
 
 ## Testing
 
-> **Tests are not configured yet.** There is no test runner or test script in `package.json` at this stage of the project. This is planned for later.
+The project uses **Jest** (`jest-expo` preset) for unit and integration tests, located in the `__tests__/` folder.
+
+Run all tests:
+
+```bash
+npm test
+```
+
+Run specific suites:
+
+```bash
+npm run test:unit         # Unit tests only  (__tests__/unit)
+npm run test:integration  # Integration tests only (__tests__/integration)
+npm run test:watch        # Watch mode (re-runs on file change)
+npm run test:coverage     # Generate a coverage report
+```
+
+> **Tests run automatically before every commit** via the `pre-commit` Husky hook (alongside linting), and are also run in the **`CI - PR`** GitHub Actions workflow whenever a Pull Request is opened or updated targeting `dev` or `main`.
 
 ---
 
@@ -436,7 +437,7 @@ git commit --no-verify -m "your message"
 If you see unexpected errors after pulling, reinstall dependencies:
 
 ```bash
-npm ci
+npm install
 ```
 
 ---
@@ -446,14 +447,16 @@ npm ci
 | Step | Command |
 |---|---|
 | Clone the project | `git clone <repository-url>` |
-| Install dependencies | `npm ci` |
+| Install dependencies | `npm install` |
 | Start the dev server | `npm start` |
 | Create a new branch | `git checkout -b feat/my-feature` |
 | Commit with convention | `git commit -m "feat: short description"` |
 | Push your branch | `git push origin feat/my-feature` |
-| Open a Pull Request | From your branch → `dev` on GitHub |
-| Lint check (manual) | `npm run lint` |
-| Lint check (automatic) | Runs on every `git commit` via Husky |
+| Open a Pull Request | From your branch → `dev` on GitHub (when feature is finished) |
+| Lint (manual) | `npm run lint` |
+| Test (manual) | `npm test` / `npm run test:unit` / `npm run test:integration` |
+| Pre-commit check | Lint + tests run automatically on every `git commit` via Husky |
+| CI check | Lint + tests run automatically on every PR via `CI - PR` workflow |
 | Release | Merge `dev` → `main` (automated) |
 
 **Quick commit type reference:**

@@ -39,6 +39,11 @@ You can then open the app in:
 | iOS | `npm run ios` | Opens app on iOS simulator |
 | Web | `npm run web` | Opens app in browser |
 | Lint | `npm run lint` | Runs ESLint |
+| Test | `npm test` | Runs all tests |
+| Test (unit) | `npm run test:unit` | Runs unit tests only |
+| Test (integration) | `npm run test:integration` | Runs integration tests only |
+| Test (watch) | `npm run test:watch` | Runs tests in watch mode |
+| Test (coverage) | `npm run test:coverage` | Generates a coverage report |
 
 ---
 
