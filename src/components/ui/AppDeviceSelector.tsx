@@ -7,6 +7,8 @@ import {
   View,
 } from "react-native";
 import { BikeLogo } from "./BikeLogo";
+import { BatteryStatusBar } from "./BatteryStatusBar";
+import { Ionicons } from "@expo/vector-icons";
 
 
 
@@ -31,10 +33,13 @@ export function AppDeviceSelector({
             <Text style = {[typography.cardTitle, styles.deviceName]}>{device.name}</Text>
             <View style = {styles.techInfoContainer}>
                 {signalDisplay(device.signal)}
-                <Text>oakfjda</Text>
+                <BatteryStatusBar level={device.battery}></BatteryStatusBar>
             </View>
         </View>
-
+        
+        <View style = {{margin: -spacing.xxl}}>
+            <Ionicons name="chevron-forward-outline" size={25}></Ionicons>
+        </View>
         {/*device info */}
     </Pressable>
   );
@@ -69,7 +74,9 @@ const styles = StyleSheet.create({
     },
     techInfoContainer:{
         flexDirection:"row",
+        maxWidth: "40%",
         justifyContent:"space-between",
+        gap: spacing.xxl,
     },
     deviceName:{
         fontSize: 16
@@ -81,6 +88,7 @@ const styles = StyleSheet.create({
 
 
 {/* HELPER */}
+
 
 function signalDisplay(signal: number){
     const signalStrength = getSignalStrength(signal);

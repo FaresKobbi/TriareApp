@@ -30,7 +30,7 @@ const Index = () => {
       },
       {
         name: "TRIARE-003",
-        battery: 5,
+        battery: 100,
         signal: -85,
       },
       {
