@@ -11,6 +11,8 @@
     "lint": "expo lint",
     "prepare": "husky",
     "test": "jest",
+    "test:unit": "jest __tests__/unit",
+    "test:integration": "jest __tests__/integration",
     "test:watch": "jest --watchAll",
     "test:coverage": "jest --coverage"
   },
