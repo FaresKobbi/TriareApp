@@ -6,15 +6,13 @@ import {
   Text,
   StyleProp,
   ViewStyle,
-  TextStyle,
-  StyleSheet
+  TextStyle
 } from "react-native";
 
 
 
 type IoniconsName = ComponentProps<typeof Ionicons>["name"];
 
-let isPressed = false;
 
 type AppButtonProps = {
   title: string;

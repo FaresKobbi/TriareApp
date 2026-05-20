@@ -1,4 +1,3 @@
-import { AppCard } from "../components/ui/AppCard";
 
 export const colors = {
   bg: "#EEF7F4",

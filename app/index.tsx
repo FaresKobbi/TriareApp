@@ -1,19 +1,69 @@
-import { View, Text, StyleSheet} from 'react-native'
-import React from 'react'
+import { View, Text, StyleSheet, ScrollView} from 'react-native'
+import React, { useState } from 'react'
 import { AppCard } from '@/src/components/ui/AppCard'
 import AppScreen from '@/src/components/ui/AppScreen'
 import { colors,shadows,spacing, typography } from '@/src/theme'
 import { BikeLogo } from '@/src/components/ui/BikeLogo'
 import { AppButton } from '@/src/components/ui/AppButton'
 import { AppCardGradient } from '@/src/components/ui/AppCardGradient'
+import { Device } from '@/src/models/device'
+import { AppDeviceSelector } from '@/src/components/ui/AppDeviceSelector'
 
-const index = () => {
+
+
+
+const Index = () => {
+
+  const [devices, setDevices] = useState<Device[]>([])
+
+  function scanDevices() {
+    const foundDevices: Device[] = [
+      {
+        name: "TRIARE-001",
+        battery: 85,
+        signal: -45,
+      },
+      {
+        name: "TRIARE-002",
+        battery: 25,
+        signal: -57,
+      },
+      {
+        name: "TRIARE-003",
+        battery: 100,
+        signal: -85,
+      },
+      {
+        name: "TRIARE-004",
+        battery: 5,
+        signal: -85,
+      },
+      {
+        name: "TRIARE-005",
+        battery: 5,
+        signal: -85,
+      },
+      {
+        name: "TRIARE-006",
+        battery: 5,
+        signal: -85,
+      },
+      {
+        name: "TRIARE-007",
+        battery: 5,
+        signal: -85,
+      }
+    ];
+
+    setDevices(foundDevices);
+  }
+
   return (
     <AppScreen withBottomPadding={false} style = {styles.screen}>
     
         {/*Title*/}
-        <AppCard style = {styles.titleCard} >
-          <BikeLogo surfaceColor = {colors.primaryDark}></BikeLogo>
+        <AppCard style = {styles.titleCard}>
+          <BikeLogo surfaceColor = {colors.primaryDark} bikeColor={colors.onPrimary}></BikeLogo>
           <View>
             <Text style = {typography.heroTitle}>Triare</Text>
             <Text style = {styles.description}>Rehabilition tricycle control</Text>
@@ -36,29 +86,47 @@ const index = () => {
             textStyle = {styles.scanButtonTitle}
             isShadowed = {true}
             iconName='search'
-            onPress={alert}
+            onPress={scanDevices}
           ></AppButton>
         </AppCardGradient>
 
         {/*Device List*/}
-        <AppCard style = {styles.devicesCard}>
+        <View style = {styles.devicesCardTitle}>
+              <Text style = {[typography.body, {color: colors.textMuted}]}>AVAILABLE DEVICES</Text>
+              {displayDevicesCount(devices)}
+        </View>
 
-        </AppCard>
+        <ScrollView 
+          style = {styles.devicesCardContainer} 
+          contentContainerStyle = {styles.devicesCardContent}>
+
+          {devices.map((device)=>(
+            <AppDeviceSelector key={device.name} device={device} onPress={alert}></AppDeviceSelector>
+          ))}
+        </ScrollView>
 
     </AppScreen>
 
   )
 }
 
-export default index
+
+{/** HELPER */}
+function displayDevicesCount(devices: Device[]){
+ return (
+    <Text style = {[typography.body, styles.description]}>{devices.length} found</Text>
+ )
+}
+
+export default Index
 
 const styles = StyleSheet.create({
   screen : {
-    gap : spacing.xs
+    gap : spacing.xs,
   },
 
   description : {
-    color : colors.textMuted,
+    color : colors.textLight,
   },
 
   scanningCardDescription : {
@@ -75,9 +143,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems : "center",
     gap: spacing.sm,
-    flex : 1,
+    flex : 0,
     backgroundColor: colors.transparent,
-    borderWidth: 0
+    borderWidth: 0,
   },
   
   scanningCard: {
@@ -94,8 +162,22 @@ const styles = StyleSheet.create({
     justifyContent : "center",
   },
 
-  devicesCard: {
-    flex : 8
+  devicesCardTitle:{
+    flexDirection:"row",
+    alignItems:"center",
+    justifyContent:"space-between",
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg
+  },
+
+  devicesCardContainer: {
+    flex : 8,
+    backgroundColor: colors.transparent,
+    paddingHorizontal:spacing.md
+  },
+  
+  devicesCardContent:{
+    gap: spacing.sm,
   }
 })
 

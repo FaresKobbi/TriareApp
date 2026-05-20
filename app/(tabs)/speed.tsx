@@ -1,6 +1,5 @@
 import { View, Text } from 'react-native'
 import React from 'react'
-import index from '..'
 
 const speed = () => {
   return (
