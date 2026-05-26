@@ -35,18 +35,18 @@ const Index = () => {
       },
       {
         name: "TRIARE-004",
-        battery: 5,
+        battery: null,
         signal: -85,
       },
       {
         name: "TRIARE-005",
         battery: 5,
-        signal: -85,
+        signal: null,
       },
       {
-        name: "TRIARE-006",
-        battery: 5,
-        signal: -85,
+        name: null,
+        battery: null,
+        signal: null,
       },
       {
         name: "TRIARE-007",

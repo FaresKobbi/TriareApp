@@ -30,7 +30,7 @@ export function AppDeviceSelector({
     >
         <BikeLogo surfaceColor={colors.primarySoft} bikeColor={colors.primaryDark}></BikeLogo>
         <View style = {styles.infoContainer}>
-            <Text style = {[typography.cardTitle, styles.deviceName]}>{device.name}</Text>
+            <Text style = {[typography.cardTitle, styles.deviceName]}>{device.name ?? "Unknown"}</Text>
             <View style = {styles.techInfoContainer}>
                 {signalDisplay(device.signal)}
                 <BatteryStatusBar level={device.battery}></BatteryStatusBar>
@@ -90,7 +90,15 @@ const styles = StyleSheet.create({
 {/* HELPER */}
 
 
-function signalDisplay(signal: number){
+function signalDisplay(signal: number | null){
+    if(signal === null || signal === undefined){
+        return (
+            <View style={styles.signalLevelContainer}>
+                <View style={[styles.signalLevelIndicator, {backgroundColor: colors.textMuted}]}></View>
+                <Text style={{color: colors.textMuted, fontSize: 12}}>Unknown signal</Text>
+            </View>
+        );
+    }
     const signalStrength = getSignalStrength(signal);
     return (
     <View style={styles.signalLevelContainer}>

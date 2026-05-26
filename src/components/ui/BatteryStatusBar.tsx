@@ -2,22 +2,24 @@ import { colors, radius, spacing } from "@/src/theme";
 import { View, Text, StyleSheet } from "react-native";
 
 type BatteryStatusBarProps = {
-  level: number;
+  level: number | null;
 };
 
 export function BatteryStatusBar({ level }: BatteryStatusBarProps) {
-  const safeLevel = Math.max(0, Math.min(level, 100));
+  const isUnknown = level === null || level === undefined;
+  const safeLevel = isUnknown ? 100 : Math.max(0, Math.min(level, 100));
 
   function getBatteryColor() {
-    if (safeLevel <= 20) return colors.danger ; 
-    if (safeLevel <= 50) return colors.warning; 
+    if (isUnknown) return colors.textMuted;
+    if (safeLevel <= 20) return colors.danger;
+    if (safeLevel <= 50) return colors.warning;
     return colors.success;
   }
 
   return (
     <View style={styles.container}>
 
-      <View style={styles.batteryOuter}>
+      <View style={[styles.batteryOuter, isUnknown && { backgroundColor: colors.textMuted }]}>
         <View
           style={[
             styles.batteryInner,
@@ -29,7 +31,7 @@ export function BatteryStatusBar({ level }: BatteryStatusBarProps) {
         />
       </View>
 
-      <Text style={styles.percentage}>{safeLevel}%</Text>
+      <Text style={styles.percentage}>{isUnknown ? "—%" : `${safeLevel}%`}</Text>
     </View>
   );
 }
