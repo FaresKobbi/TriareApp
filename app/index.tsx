@@ -8,15 +8,19 @@ import { AppButton } from '@/src/components/ui/AppButton'
 import { AppCardGradient } from '@/src/components/ui/AppCardGradient'
 import { Device } from '@/src/models/device'
 import { AppDeviceSelector } from '@/src/components/ui/AppDeviceSelector'
+import { requestBluetoothPermissions } from '@/src/features/bluetooth/hooks/requestBluetoothPermission'
+import { bluetoothService } from '@/src/features/bluetooth/BluetoothService'
 
 
 
 
 const Index = () => {
 
-  const [devices, setDevices] = useState<Device[]>([])
+  const [devices, setDevices] = useState<Device[]>([]);
 
   function scanDevices() {
+
+    bluetoothService.scanForDevice();
     const foundDevices: Device[] = [
       {
         name: "TRIARE-001",
