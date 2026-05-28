@@ -13,7 +13,7 @@ export class BluetoothService implements IBluetoothService{
     isTriareDevice = (device: Device) => {
         const deviceName = device.name ?? device.localName ?? "";
 
-        const hasExpectedName = deviceName.includes("STM32WB0") || deviceName.includes("TRIARE");
+        const hasExpectedName = deviceName.includes("STM32") || deviceName.includes("TRIARE");
 
         const advertisesTriareService = device.serviceUUIDs?.includes(this.TRIARE_SERVICE_UUID) ?? false;
 
@@ -36,7 +36,7 @@ export class BluetoothService implements IBluetoothService{
                 onError?.();
                 return;
             }
-
+            console.log(device)
             if (device && this.isTriareDevice(device)) {
                 onDeviceFound(device);
             }
