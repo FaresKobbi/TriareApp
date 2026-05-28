@@ -1,4 +1,4 @@
-import { PermissionsAndroid, Platform } from "react-native";
+import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
 
 export async function requestBluetoothPermissions(): Promise<boolean> {
   if (Platform.OS !== "android") {
@@ -26,4 +26,45 @@ export async function requestBluetoothPermissions(): Promise<boolean> {
   );
 
   return granted === PermissionsAndroid.RESULTS.GRANTED;
+}
+
+
+
+export async function ensureBluetoothPermissions(): Promise<boolean> {
+  while (true) {
+    const granted = await requestBluetoothPermissions();
+
+    if (granted) {
+      return true;
+    }
+
+    const shouldRetry = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        "Bluetooth permission required",
+        "The app needs Bluetooth permission to scan and connect to the TRIARE device.",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: () => resolve(false),
+          },
+          {
+            text: "Try again",
+            onPress: () => resolve(true),
+          },
+          {
+            text: "Open settings",
+            onPress: () => {
+              Linking.openSettings();
+              resolve(false);
+            },
+          },
+        ]
+      );
+    });
+
+    if (!shouldRetry) {
+      return false;
+    }
+  }
 }
