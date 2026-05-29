@@ -72,7 +72,7 @@ const Index = () => {
         contentContainerStyle={styles.devicesCardContent}>
 
         {triareDevicesDTO.map((device) => (
-          <AppDeviceSelector key={device.id} device={device} onPress={alert}></AppDeviceSelector>
+          <AppDeviceSelector key={device.id} device={device} onPress={() => connect(device.id)}></AppDeviceSelector>
         ))}
       </ScrollView>
 

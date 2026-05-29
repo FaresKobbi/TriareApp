@@ -64,8 +64,9 @@ function createMockDevice(overrides: Partial<Device> = {}): Device {
     localName: null,
     rssi: -50,
     serviceUUIDs: [],
+    services: jest.fn().mockResolvedValue([]),
     ...overrides,
-  } as Device;
+  } as unknown as Device;
 }
 
 

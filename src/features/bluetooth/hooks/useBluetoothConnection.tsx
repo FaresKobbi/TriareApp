@@ -72,6 +72,18 @@ export function useBluetoothConnection(bluetoothService: IBluetoothService){
             const connected = await bluetoothService.connectToDevice(device.id);
             setConnectedDevice(connected);
             setStatus("connected");
+
+            // Log discovered services and characteristics
+            const services = await connected.services();
+            console.log(`[BLE] Connected to ${connected.name ?? connected.id}`);
+            console.log(`[BLE] Found ${services.length} service(s)`);
+            for (const service of services) {
+                console.log(`[BLE]   Service: ${service.uuid}`);
+                const characteristics = await service.characteristics();
+                for (const char of characteristics) {
+                    console.log(`[BLE]     Characteristic: ${char.uuid} | readable: ${char.isReadable} | writable: ${char.isWritableWithResponse || char.isWritableWithoutResponse} | notifiable: ${char.isNotifiable}`);
+                }
+            }
         } catch {
             setStatus("error");
             setError("Unable to connect to device");

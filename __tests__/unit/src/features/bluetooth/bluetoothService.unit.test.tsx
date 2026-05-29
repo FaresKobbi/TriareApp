@@ -25,7 +25,7 @@ const mockBleManager = new BleManager() as jest.Mocked<BleManager>;
 
 
 {/**requestBluetoothPermission Mocking */ }
-jest.mock("@/src/features/bluetooth/hooks/requestBluetoothPermission", () => ({
+jest.mock("@/src/features/bluetooth/requestBluetoothPermission", () => ({
   requestBluetoothPermissions: jest.fn()
 }));
 
