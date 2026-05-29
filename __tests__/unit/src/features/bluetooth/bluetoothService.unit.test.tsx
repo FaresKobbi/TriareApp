@@ -1,5 +1,5 @@
 import { BluetoothService } from "@/src/features/bluetooth/BluetoothService";
-import { requestBluetoothPermissions } from "@/src/features/bluetooth/hooks/requestBluetoothPermission";
+import { requestBluetoothPermissions } from "@/src/features/bluetooth/requestBluetoothPermission";
 import { BleManager, Device } from "react-native-ble-plx";
 
 
@@ -164,8 +164,8 @@ describe('bluetoorhService.scanForTriareDevice', () => {
 
     const scanCallback = (mockBleManager.startDeviceScan as jest.Mock).mock.calls[0][2];
 
-    expect(() => {scanCallback({ message: "Bluetooth error" }, null);}).not.toThrow();
-  
+    expect(() => { scanCallback({ message: "Bluetooth error" }, null); }).not.toThrow();
+
   })
 
   it("should call onDeviceFound when device is triare device", async () => {
@@ -209,7 +209,7 @@ describe('bluetoorhService.scanForTriareDevice', () => {
 
   })
 
-    it("should not call onDeviceFound when device is null", async () => {
+  it("should not call onDeviceFound when device is null", async () => {
 
     (requestBluetoothPermissions as jest.Mock).mockResolvedValue(true);
 

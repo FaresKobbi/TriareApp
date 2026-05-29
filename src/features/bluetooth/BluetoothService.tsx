@@ -1,8 +1,8 @@
 import { BleManager, Device } from "react-native-ble-plx";
-import { requestBluetoothPermissions } from "./hooks/requestBluetoothPermission";
 import { IBluetoothService } from "./IBluetoothService";
+import { requestBluetoothPermissions } from "./requestBluetoothPermission";
 
-export class BluetoothService implements IBluetoothService{
+export class BluetoothService implements IBluetoothService {
     private bleManager: BleManager;
 
     constructor(bleManager: BleManager = new BleManager()) {
@@ -27,19 +27,19 @@ export class BluetoothService implements IBluetoothService{
             const permissionResult = await requestBluetoothPermissions();
 
             if (!permissionResult) {
-            return;
+                return;
             }
 
             this.bleManager.startDeviceScan(null, null, (error, device) => {
-            if (error) {
-                console.warn("BLE scan error", error.message);
-                onError?.();
-                return;
-            }
-            console.log(device)
-            if (device && this.isTriareDevice(device)) {
-                onDeviceFound(device);
-            }
+                if (error) {
+                    console.warn("BLE scan error", error.message);
+                    onError?.();
+                    return;
+                }
+                console.log(device)
+                if (device && this.isTriareDevice(device)) {
+                    onDeviceFound(device);
+                }
             });
         } catch (error) {
             console.warn("Error during BLE scan", error);
