@@ -224,25 +224,106 @@ describe('bluetoorhService.scanForTriareDevice', () => {
 
   })
 
-  it("should throws if requestBluetoothPermissions throws", async () => {
-    
+  it("should call onError if requestBluetoothPermissions throws", async () => {
+    mockRequestBluetoothPermissions.mockRejectedValue(
+      new Error("Permission request failed")
+    );
+
+    const onDeviceFound = jest.fn();
+    const onError = jest.fn();
+
+    await testBluetoothService.scanForTriareDevice(onDeviceFound, onError);
+
+    expect(mockRequestBluetoothPermissions).toHaveBeenCalledTimes(1);
+    expect(mockBleManager.startDeviceScan).not.toHaveBeenCalled();
+    expect(onDeviceFound).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledTimes(1);
   })
 
-  it("should throws if startDeviceScan throws", async () => {
+  it("should call onError if startDeviceScan throws", async () => {
+    mockRequestBluetoothPermissions.mockResolvedValue(true);
 
-  })
+    (mockBleManager.startDeviceScan as jest.Mock).mockImplementation(() => {
+      throw new Error("Scan failed");
+    });
 
-});
+    const onDeviceFound = jest.fn();
+    const onError = jest.fn();
 
-/*
+    await testBluetoothService.scanForTriareDevice(onDeviceFound, onError);
 
-describe('', () => {
-
-});
-
-
-  it("", () => {
-
+    expect(mockRequestBluetoothPermissions).toHaveBeenCalledTimes(1);
+    expect(mockBleManager.startDeviceScan).toHaveBeenCalledWith(
+      null,
+      null,
+      expect.any(Function)
+    );
+    expect(onDeviceFound).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledTimes(1);
   });
 
-  */
+});
+
+
+describe("bluetoothService.connectToDevice", () => {
+
+  it("should connect, discover services, and return the device when the deviceId is correct", async () => {
+    const mockDevice = {
+      id: "valid-device-id",
+      name: "TRIARE-001",
+      discoverAllServicesAndCharacteristics: jest.fn().mockResolvedValue(undefined),
+    } as unknown as Device;
+
+    (mockBleManager.connectToDevice as jest.Mock).mockResolvedValue(mockDevice);
+
+    const result = await testBluetoothService.connectToDevice("valid-device-id");
+
+    expect(mockBleManager.connectToDevice).toHaveBeenCalledWith("valid-device-id");
+    expect(mockDevice.discoverAllServicesAndCharacteristics).toHaveBeenCalledTimes(1);
+    expect(result).toBe(mockDevice);
+  });
+
+  it("should throw when the deviceId is wrong or unavailable", async () => {
+    (mockBleManager.connectToDevice as jest.Mock).mockRejectedValue(
+      new Error("Device not found")
+    );
+
+    await expect(
+      testBluetoothService.connectToDevice("non-existent-id")
+    ).rejects.toThrow("Device not found");
+
+    expect(mockBleManager.connectToDevice).toHaveBeenCalledWith("non-existent-id");
+  });
+
+  it("should throw when connectToDevice succeeds but discoverAllServicesAndCharacteristics fails", async () => {
+    const mockDevice = {
+      id: "valid-device-id",
+      name: "TRIARE-001",
+      discoverAllServicesAndCharacteristics: jest.fn().mockRejectedValue(
+        new Error("Service discovery failed")
+      ),
+    } as unknown as Device;
+
+    (mockBleManager.connectToDevice as jest.Mock).mockResolvedValue(mockDevice);
+
+    await expect(
+      testBluetoothService.connectToDevice("valid-device-id")
+    ).rejects.toThrow("Service discovery failed");
+
+    expect(mockBleManager.connectToDevice).toHaveBeenCalledWith("valid-device-id");
+    expect(mockDevice.discoverAllServicesAndCharacteristics).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw when an empty deviceId is provided", async () => {
+    (mockBleManager.connectToDevice as jest.Mock).mockRejectedValue(
+      new Error("Device not found")
+    );
+
+    await expect(
+      testBluetoothService.connectToDevice("")
+    ).rejects.toThrow();
+
+    expect(mockBleManager.connectToDevice).toHaveBeenCalledWith("");
+  });
+
+})
