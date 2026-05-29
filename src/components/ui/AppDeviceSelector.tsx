@@ -1,4 +1,3 @@
-import { Device } from "@/src/models/triareDeviceDTO";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -9,13 +8,14 @@ import {
 } from "react-native";
 import { BatteryStatusBar } from "./BatteryStatusBar";
 import { BikeLogo } from "./BikeLogo";
+import { TriareDeviceDTO } from "@/src/models/triareDeviceDTO";
 
 
 
 
 
 type AppDeviceSelectorProps = {
-    device: Device;
+    device: TriareDeviceDTO;
     onPress: () => void;
 };
 
@@ -32,7 +32,7 @@ export function AppDeviceSelector({
             <View style={styles.infoContainer}>
                 <Text style={[typography.cardTitle, styles.deviceName]}>{device.name ?? "Unknown"}</Text>
                 <View style={styles.techInfoContainer}>
-                    {signalDisplay(device.signal)}
+                    {signalDisplay(device.rssi)}
                     <BatteryStatusBar level={device.battery}></BatteryStatusBar>
                 </View>
             </View>
