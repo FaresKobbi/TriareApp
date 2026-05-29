@@ -1,3 +1,23 @@
+# [1.2.0](https://github.com/FaresKobbi/TriareApp/compare/v1.1.0...v1.2.0) (2026-05-29)
+
+
+### Bug Fixes
+
+* **bluetooth:** change STM32 name for basic recognition ([bbf30ee](https://github.com/FaresKobbi/TriareApp/commit/bbf30ee6d6d4d820450f55d09554d647d6a345ec))
+* manage null field for devices display after scan ([948f3fa](https://github.com/FaresKobbi/TriareApp/commit/948f3fabc6f5ca42d1799057b0d5fadb864746b6))
+* **ui:** update triare dto import and rssi display in AppDeviceSeclector ([168f5b5](https://github.com/FaresKobbi/TriareApp/commit/168f5b5c49b77a6ef3970c52b57cce58f9e364dd))
+
+
+### Features
+
+* **bluetooth:** add bluetooth scanning and connection to basic STM device ([d895aed](https://github.com/FaresKobbi/TriareApp/commit/d895aedf67d1852fea4dca9ae43447b8b33dc9f8))
+* **bluetooth:** add bluetooth scanning and connection to basic STM device MERGED TO MAIN ([51074a4](https://github.com/FaresKobbi/TriareApp/commit/51074a46e39a09343b05f79c126d4eaee57ecd8a))
+* **bluetooth:** add connection to ble device onPress AppDeviceSelector ([e1eed8a](https://github.com/FaresKobbi/TriareApp/commit/e1eed8afb59f19a7b9d29c4c1ba312e6795473e5))
+* **bluetooth:** add ensureBluetoothPermissions with retry dialog ([a8114e5](https://github.com/FaresKobbi/TriareApp/commit/a8114e5831fea314d8b734527cc8070e77e84d8c))
+* **bluetooth:** implement BLE scanning, device filtering, and dependency injection ([8c9aae0](https://github.com/FaresKobbi/TriareApp/commit/8c9aae06fd3e9d7a711a331c870fbbff362d61df))
+* **bluetooth:** implement bluetooth permission request and scanning ([eb09278](https://github.com/FaresKobbi/TriareApp/commit/eb09278e1be9c585e1ad59e6da1493dc043221ba))
+* **bluetooth:** implement useBluetoothConnection hook ([23dcb6e](https://github.com/FaresKobbi/TriareApp/commit/23dcb6e11c1d5aee970919a47226cf47aadcbc62))
+
 # [1.1.0](https://github.com/FaresKobbi/TriareApp/compare/v1.0.0...v1.1.0) (2026-05-20)
 
 
