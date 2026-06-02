@@ -16,10 +16,13 @@ type IoniconsName = ComponentProps<typeof Ionicons>["name"];
 
 type AppButtonProps = {
   title: string;
+  /** Background colour of the button. Defaults to the primary brand colour. */
   surfaceColor?: string;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  /** When true, renders a coloured drop-shadow matching `surfaceColor`. */
   isShadowed?: boolean;
+  /** Optional Ionicons icon rendered to the left of the title. */
   iconName?: IoniconsName;
   onPress: () => void;
 };
