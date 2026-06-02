@@ -1,21 +1,21 @@
 import { BleManager, Device } from "react-native-ble-plx";
-import { IBluetoothService } from "./IBluetoothService";
+import { IBluetoothConnectionHandler } from "./IBluetoothConnectionHandler";
 import { requestBluetoothPermissions } from "./requestBluetoothPermission";
 
-export class BluetoothService implements IBluetoothService {
+export class BluetoothConnectionHandler implements IBluetoothConnectionHandler {
 
-    private static instance: BluetoothService;
+    private static instance: BluetoothConnectionHandler;
     private bleManager: BleManager;
 
     constructor(bleManager: BleManager = new BleManager()) {
         this.bleManager = bleManager;
     }
 
-    static getInstance(bleManager?: BleManager): BluetoothService {
-        if (!BluetoothService.instance) {
-            BluetoothService.instance = new BluetoothService(bleManager);
+    static getInstance(bleManager?: BleManager): BluetoothConnectionHandler {
+        if (!BluetoothConnectionHandler.instance) {
+            BluetoothConnectionHandler.instance = new BluetoothConnectionHandler(bleManager);
         }
-        return BluetoothService.instance;
+        return BluetoothConnectionHandler.instance;
     }
 
 
@@ -72,4 +72,4 @@ export class BluetoothService implements IBluetoothService {
 }
 
 
-export const realBluetoothService = BluetoothService.getInstance();
+export const realBluetoothService = BluetoothConnectionHandler.getInstance();

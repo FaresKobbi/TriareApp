@@ -1,13 +1,13 @@
+import { useBluetoothConnection } from "@/src/features/bluetooth/hooks/useBluetoothConnection";
+import { IBluetoothService } from "@/src/features/bluetooth/IBluetoothConnectionHandler";
 import React, { act } from "react";
 import { Device } from "react-native-ble-plx";
 import { create } from "react-test-renderer";
-import { useBluetoothConnection } from "@/src/features/bluetooth/hooks/useBluetoothConnection";
-import { IBluetoothService } from "@/src/features/bluetooth/IBluetoothService";
 
 
-{/**SETUP */}
+{/**SETUP */ }
 
-{/**react-native-ble-plx Mocking */}
+{/**react-native-ble-plx Mocking */ }
 jest.mock("react-native-ble-plx", () => ({
   BleManager: jest.fn(),
   Device: jest.fn(),
@@ -46,7 +46,7 @@ function renderHook<T>(hookFn: () => T) {
 }
 
 
-{/**IBluetoothService mock factory*/}
+{/**IBluetoothService mock factory*/ }
 function createMockBluetoothService(): jest.Mocked<IBluetoothService> {
   return {
     scanForTriareDevice: jest.fn(),
@@ -56,7 +56,7 @@ function createMockBluetoothService(): jest.Mocked<IBluetoothService> {
 }
 
 
-{/**Reusable mock BLE Device factory */}
+{/**Reusable mock BLE Device factory */ }
 function createMockDevice(overrides: Partial<Device> = {}): Device {
   return {
     id: "device-1",
@@ -83,7 +83,7 @@ afterEach(() => {
 });
 
 
-{/**TEST */}
+{/**TEST */ }
 
 describe("useBluetoothConnection initial state", () => {
   it("should start with idle status and empty devices", () => {

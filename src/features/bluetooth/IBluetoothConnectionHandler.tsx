@@ -3,7 +3,7 @@ import { Device } from "react-native-ble-plx";
 export type ScanDeviceCallback = (device: Device) => void;
 export type ScanErrorCallback = () => void;
 
-export interface IBluetoothService {
+export interface IBluetoothConnectionHandler {
   scanForTriareDevice(
     onDeviceFound: ScanDeviceCallback,
     onError: ScanErrorCallback
