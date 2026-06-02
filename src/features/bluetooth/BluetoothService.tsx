@@ -3,11 +3,23 @@ import { IBluetoothService } from "./IBluetoothService";
 import { requestBluetoothPermissions } from "./requestBluetoothPermission";
 
 export class BluetoothService implements IBluetoothService {
+
+    private static instance: BluetoothService;
     private bleManager: BleManager;
 
     constructor(bleManager: BleManager = new BleManager()) {
         this.bleManager = bleManager;
     }
+
+    static getInstance(bleManager?: BleManager): BluetoothService {
+        if (!BluetoothService.instance) {
+            BluetoothService.instance = new BluetoothService(bleManager);
+        }
+        return BluetoothService.instance;
+    }
+
+
+
     private TRIARE_SERVICE_UUID = "00000000-0000-0000-0000-000000000011";
 
     isTriareDevice = (device: Device) => {
@@ -60,4 +72,4 @@ export class BluetoothService implements IBluetoothService {
 }
 
 
-export const realBluetoothService = new BluetoothService();
+export const realBluetoothService = BluetoothService.getInstance();

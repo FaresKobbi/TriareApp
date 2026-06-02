@@ -4,7 +4,7 @@ import { AppCardGradient } from '@/src/components/ui/AppCardGradient'
 import { AppDeviceSelector } from '@/src/components/ui/AppDeviceSelector'
 import AppScreen from '@/src/components/ui/AppScreen'
 import { BikeLogo } from '@/src/components/ui/BikeLogo'
-import { realBluetoothService } from '@/src/features/bluetooth/BluetoothService'
+import { BluetoothService} from '@/src/features/bluetooth/BluetoothService'
 import { useBluetoothConnection } from '@/src/features/bluetooth/hooks/useBluetoothConnection'
 import { ensureBluetoothPermissions } from '@/src/features/bluetooth/requestBluetoothPermission'
 import { TriareDeviceDTO } from '@/src/models/triareDeviceDTO'
@@ -24,7 +24,7 @@ const Index = () => {
     startScan,
     stopScan,
     connect
-  } = useBluetoothConnection(realBluetoothService);
+  } = useBluetoothConnection(BluetoothService.getInstance());
 
   ensureBluetoothPermissions();
 
