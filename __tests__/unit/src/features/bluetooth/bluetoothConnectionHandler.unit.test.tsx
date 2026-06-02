@@ -1,4 +1,4 @@
-import { BluetoothConnectionHandler } from "@/src/features/bluetooth/BluetoothConnectionHandler";
+import { BluetoothConnectionHandler } from "@/src/features/bluetooth/handler/BluetoothConnectionHandler";
 import { requestBluetoothPermissions } from "@/src/features/bluetooth/requestBluetoothPermission";
 import { BleManager, Device } from "react-native-ble-plx";
 
@@ -100,7 +100,7 @@ describe("bluetoothService.IsTriareDevice. May change when the real protocol is 
     const bleDevice = null;
 
     expect(() => {
-      // @ts-expect-error Testing invalid runtime inpu
+      // @ts-expect-error Testing invalid runtime input
       testBluetoothConnectionHandler.isTriareDevice(bleDevice);
     }).toThrow();
 

@@ -1,7 +1,7 @@
 import { mapBleDeviceToTriareDeviceDTO, TriareDeviceDTO } from "@/src/models/triareDeviceDTO";
 import { useState } from "react";
 import { Device } from "react-native-ble-plx";
-import { IBluetoothService } from "../IBluetoothConnectionHandler";
+import { IBluetoothService } from "../handler/IBluetoothConnectionHandler";
 
 type ConnectionStatus =
     | "idle"

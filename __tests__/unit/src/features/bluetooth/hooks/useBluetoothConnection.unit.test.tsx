@@ -1,5 +1,5 @@
+import { IBluetoothService } from "@/src/features/bluetooth/handler/IBluetoothConnectionHandler";
 import { useBluetoothConnection } from "@/src/features/bluetooth/hooks/useBluetoothConnection";
-import { IBluetoothService } from "@/src/features/bluetooth/IBluetoothConnectionHandler";
 import React, { act } from "react";
 import { Device } from "react-native-ble-plx";
 import { create } from "react-test-renderer";

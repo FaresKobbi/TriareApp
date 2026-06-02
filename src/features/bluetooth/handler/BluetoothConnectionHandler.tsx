@@ -1,6 +1,6 @@
 import { BleManager, Device } from "react-native-ble-plx";
+import { requestBluetoothPermissions } from "../requestBluetoothPermission";
 import { IBluetoothConnectionHandler } from "./IBluetoothConnectionHandler";
-import { requestBluetoothPermissions } from "./requestBluetoothPermission";
 
 export class BluetoothConnectionHandler implements IBluetoothConnectionHandler {
 
