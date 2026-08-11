@@ -62,18 +62,29 @@ All Bluetooth logic is isolated inside `src/features/bluetooth/` and organised i
 ```
 src/features/bluetooth/
 ├── constants/
-│   └── bleUUIDs.ts                 # All TRIARE UUIDs as named constants
+│   ├── bleUUIDs.ts                 # All TRIARE UUIDs as named constants
+│   └── triareProtocol.ts           # Opcodes, ACK timeout, payload limits
+├── protocol/
+│   ├── TriareFrames.ts             # Typed decoded-frame union + telemetry type
+│   ├── CommandCodec.ts             # Codec interface (the wire-format seam)
+│   └── TriareVescCodec.ts          # WBA65 implementation (LE float32 payloads)
 ├── handler/
 │   ├── IBluetoothConnectionHandler.tsx   # Interface (testability contract)
 │   └── BluetoothConnectionHandler.tsx    # Singleton; wraps BleManager
 ├── services/
-│   ├── BasicCommunicationService.tsx     # Domain service for Read/Write/Notify
+│   ├── BasicCommunicationService.tsx     # Raw byte Read/Write/Notify (diagnostics)
+│   ├── TriareCommandService.ts           # Typed commands, response matching, timeouts
 │   └── BleSession.ts                     # Aggregates services for one connection
+├── mock/
+│   └── MockBleCharacteristicManager.ts   # In-memory firmware simulator
 ├── context/
 │   └── BleSessionContext.tsx             # React Context + Provider + hooks
 ├── hooks/
 │   ├── useBluetoothConnection.tsx        # Scan / connect lifecycle
 │   └── useBasicCommunication.ts          # Read, write, subscribe hook
+├── utils/
+│   └── base64.ts                         # base64 ↔ Uint8Array helpers
+├── IBleCharacteristicManager.ts          # GATT-layer contract (real + mock impls)
 ├── BleCharacteristicManager.tsx          # Low-level GATT primitives
 └── requestBluetoothPermission.tsx        # Android permission helper
 ```
@@ -85,15 +96,24 @@ UI (screens / hooks)
         │
         ▼
 useBluetoothConnection     — scan, connect, connection status state machine
-useBasicCommunication      — initial read, live notifications, sendBytes()
+useMotorControl            — typed motor commands + telemetry state
+useBasicCommunication      — raw bytes: initial read, notifications, sendBytes()
         │
         ▼
-BleSession                 — created once per connection; owns both services below
+BleSession                 — created once per connection; composition root that
+        │                    wires the concrete manager + codec into the services
+        ├── TriareCommandService       — typed protocol commands; serializes
+        │        │                       write → notification round-trips with a
+        │        │                       3 s ACK timeout (AckTimeoutError /
+        │        │                       UnexpectedFrameError as first-class errors)
+        │        └── CommandCodec (TriareVescCodec) — encode/decode wire frames
+        ├── BasicCommunicationService  — raw byte access for diagnostics
         │
-        ├── BleCharacteristicManager   — thin GATT wrapper (read / write / subscribe)
-        │                                values are raw base64 strings at this layer
-        └── BasicCommunicationService  — domain layer; converts base64 ↔ Uint8Array,
-                                         addresses characteristics by name (not UUID)
+        ▼
+IBleCharacteristicManager              — GATT-layer contract (base64 values)
+   ├── BleCharacteristicManager       — real device via react-native-ble-plx
+   └── MockBleCharacteristicManager   — in-memory firmware simulator (tests /
+                                         offline development)
         │
         ▼
 BluetoothConnectionHandler             — scan, connect, discoverAllServicesAndCharacteristics
@@ -104,15 +124,22 @@ react-native-ble-plx (BleManager)      — native BLE adapter
 
 ### TRIARE BLE Protocol
 
+The full protocol — GATT profile, opcode table, framing, telemetry layout, and
+known gaps — is documented in [BLE_PROTOCOL.md](./BLE_PROTOCOL.md) and confirmed
+against the reference host script `triare_host_ble.py` (WBA65 firmware).
+
 | Element | UUID | Role |
 |---|---|---|
-| Service | `00000000-0000-0000-0000-000000000011` | Primary TRIARE service |
-| Read char | `00000000-0000-0000-0000-000000004444` | Returns 20 bytes from device |
-| Write char | `00000000-0000-0000-0000-000000003333` | Write without response |
-| Notify char | `00000000-0000-0000-0000-000000002222` | Device-initiated notifications |
+| Service | `12345678-1234-5678-1234-56789abcdef0` | Primary TRIARE service |
+| TX char | `12345678-1234-5678-1234-56789abcdef1` | Command frames (write without response) |
+| RX char | `12345678-1234-5678-1234-56789abcdef2` | Response frames (notify) |
+| DevEUI char | `12345678-1234-5678-1234-56789abcdef3` | 8-byte DevEUI (read) |
 | CCCD | `00002902-0000-1000-8000-00805f9b34fb` | Enables/disables notifications |
 
-All UUIDs are declared once in `bleUUIDs.ts` and imported everywhere; no UUID string is duplicated.
+All UUIDs are declared once in `bleUUIDs.ts` and imported everywhere; no UUID
+string is duplicated. Opcodes and protocol constants live in
+`triareProtocol.ts`; the wire format itself is confined to `protocol/` behind
+the `CommandCodec` interface so a firmware protocol change stays a one-module swap.
 
 ### Connection Flow
 
@@ -185,4 +212,8 @@ Raw `Device` objects from `react-native-ble-plx` never leave `src/features/bluet
 
 ## Testing
 
-Tests live in `__tests__/` mirroring the `src/` structure. The `IBluetoothConnectionHandler` interface allows `useBluetoothConnection` and `BluetoothConnectionHandler` to be tested with a mock adapter without requiring real hardware or a running BLE stack.
+Tests live in `__tests__/` mirroring the `src/` structure, split into two Jest
+projects: `npm run test:unit` and `npm run test:integration`.
+
+- The `IBluetoothConnectionHandler` interface allows `useBluetoothConnection` and `BluetoothConnectionHandler` to be tested with a mock adapter without requiring real hardware or a running BLE stack.
+- The `IBleCharacteristicManager` interface does the same for the protocol stack: `MockBleCharacteristicManager` simulates the WBA65 firmware (ACK/data framing per opcode, simulated arm/disarm state, configurable telemetry, and a silence switch for timeout testing), so the integration tests drive the full codec → command-service flow end-to-end offline.
