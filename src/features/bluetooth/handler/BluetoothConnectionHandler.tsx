@@ -1,5 +1,6 @@
 import { BleManager, Device } from "react-native-ble-plx";
 import { TRIARE_SERVICE_UUID } from "../constants/bleUUIDs";
+import { TRIARE_DEVICE_NAME_PREFIX } from "../constants/triareProtocol";
 import { requestBluetoothPermissions } from "../requestBluetoothPermission";
 import { IBluetoothConnectionHandler } from "./IBluetoothConnectionHandler";
 
@@ -41,7 +42,8 @@ export class BluetoothConnectionHandler implements IBluetoothConnectionHandler {
      * Returns true if `device` is likely a TRIARE device.
      *
      * A device passes the filter when either condition is met:
-     * - its advertised name contains "STM32" or "TRIARE", OR
+     * - its advertised name starts with "TRI-" (current WBA65 firmware,
+     *   e.g. "TRI-2C108F") or contains "STM32"/"TRIARE" (older test boards), OR
      * - it advertises the known TRIARE service UUID.
      * Using OR allows detection even when the name is not present in the
      * advertisement packet (name may be truncated or absent on some firmware builds).
@@ -49,7 +51,10 @@ export class BluetoothConnectionHandler implements IBluetoothConnectionHandler {
     isTriareDevice = (device: Device) => {
         const deviceName = device.name ?? device.localName ?? "";
 
-        const hasExpectedName = deviceName.includes("STM32") || deviceName.includes("TRIARE");
+        const hasExpectedName =
+            deviceName.toUpperCase().startsWith(TRIARE_DEVICE_NAME_PREFIX) ||
+            deviceName.includes("STM32") ||
+            deviceName.includes("TRIARE");
 
         const advertisesTriareService = device.serviceUUIDs?.includes(TRIARE_SERVICE_UUID) ?? false;
 

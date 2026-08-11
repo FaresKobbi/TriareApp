@@ -1,5 +1,6 @@
 import { BluetoothConnectionHandler } from "@/src/features/bluetooth/handler/BluetoothConnectionHandler";
 import { requestBluetoothPermissions } from "@/src/features/bluetooth/requestBluetoothPermission";
+import { TRIARE_SERVICE_UUID } from "@/src/features/bluetooth/constants/bleUUIDs";
 import { BleManager, Device } from "react-native-ble-plx";
 
 
@@ -48,9 +49,9 @@ beforeEach(() => {
 describe("bluetoothService.IsTriareDevice. May change when the real protocol is done", () => {
   it("should return true when name and service uuid are the good ones", () => {
     const bleDevice = {
-      name: "TRIARE-001",
+      name: "TRI-2C108F",
       localName: "TRIARE Local",
-      serviceUUIDs: ["00000000-0000-0000-0000-000000000011"],
+      serviceUUIDs: [TRIARE_SERVICE_UUID],
     } as Device;
 
     expect(testBluetoothConnectionHandler.isTriareDevice(bleDevice)).toBe(true);
@@ -70,7 +71,7 @@ describe("bluetoothService.IsTriareDevice. May change when the real protocol is 
     const bleDevice = {
       name: "badName",
       localName: null,
-      serviceUUIDs: ["00000000-0000-0000-0000-000000000011"],
+      serviceUUIDs: [TRIARE_SERVICE_UUID],
     } as Device;
 
     expect(testBluetoothConnectionHandler.isTriareDevice(bleDevice)).toBe(true);
@@ -170,9 +171,9 @@ describe('bluetoorhService.scanForTriareDevice', () => {
 
   it("should call onDeviceFound when device is triare device", async () => {
     const bleDevice = {
-      name: "TRIARE-001",
+      name: "TRI-2C108F",
       localName: "TRIARE Local",
-      serviceUUIDs: ["00000000-0000-0000-0000-000000000011"],
+      serviceUUIDs: [TRIARE_SERVICE_UUID],
     } as Device;
 
     jest.spyOn(testBluetoothConnectionHandler, "isTriareDevice").mockReturnValue(true);

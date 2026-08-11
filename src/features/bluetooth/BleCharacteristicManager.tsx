@@ -1,8 +1,10 @@
 import { BleError, Device, Subscription } from "react-native-ble-plx";
+import { IBleCharacteristicManager } from "./IBleCharacteristicManager";
 
-export class BleCharacteristicManager {
+export class BleCharacteristicManager implements IBleCharacteristicManager {
   private device: Device;
   private subscriptions: Map<string, Subscription> = new Map();
+  private subscriptionCounter = 0;
 
   constructor(device: Device) {
     this.device = device;
@@ -10,6 +12,13 @@ export class BleCharacteristicManager {
 
   async write(serviceUUID: string, charUUID: string, value: string) {
     await this.device.writeCharacteristicWithResponseForService(
+      serviceUUID, charUUID, value
+    );
+  }
+
+  /** The TRIARE protocol writes command frames without response. */
+  async writeWithoutResponse(serviceUUID: string, charUUID: string, value: string) {
+    await this.device.writeCharacteristicWithoutResponseForService(
       serviceUUID, charUUID, value
     );
   }
@@ -36,7 +45,9 @@ export class BleCharacteristicManager {
         if (characteristic?.value) onData(characteristic.value);
       }
     );
-    const key = `${serviceUUID}:${charUUID}`;
+    // Counter keeps keys unique so two subscribers to the same characteristic
+    // don't evict each other from cleanup tracking.
+    const key = `${serviceUUID}:${charUUID}:${this.subscriptionCounter++}`;
     this.subscriptions.set(key, subscription);
 
     // Returns an unsubscribe function
