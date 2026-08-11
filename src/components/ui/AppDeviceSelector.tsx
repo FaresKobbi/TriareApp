@@ -90,6 +90,10 @@ const styles = StyleSheet.create({
 {/* HELPER */ }
 
 
+/**
+ * Renders a coloured dot and label for the given RSSI value, or an "Unknown"
+ * indicator when RSSI is not available.
+ */
 function signalDisplay(signal: number | null) {
     if (signal === null || signal === undefined) {
         return (
@@ -108,6 +112,16 @@ function signalDisplay(signal: number | null) {
     )
 }
 
+/**
+ * Converts an RSSI value (dBm) to a human-readable label and a colour token.
+ *
+ * Thresholds are approximate BLE conventions:
+ * - ≥ -50 dBm → "Strong" (device is very close)
+ * - ≥ -70 dBm → "Good"   (usable range)
+ * -  < -70 dBm → "Weak"   (poor signal, may drop)
+ *
+ * @returns A tuple of [label, colour hex string].
+ */
 function getSignalStrength(signal: number): [string, string] {
     if (signal >= -50) {
         return ["Strong", colors.success]

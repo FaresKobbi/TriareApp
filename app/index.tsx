@@ -4,17 +4,28 @@ import { AppCardGradient } from '@/src/components/ui/AppCardGradient'
 import { AppDeviceSelector } from '@/src/components/ui/AppDeviceSelector'
 import AppScreen from '@/src/components/ui/AppScreen'
 import { BikeLogo } from '@/src/components/ui/BikeLogo'
-import { realBluetoothService } from '@/src/features/bluetooth/BluetoothService'
+import { BluetoothConnectionHandler } from '@/src/features/bluetooth/handler/BluetoothConnectionHandler'
 import { useBluetoothConnection } from '@/src/features/bluetooth/hooks/useBluetoothConnection'
 import { ensureBluetoothPermissions } from '@/src/features/bluetooth/requestBluetoothPermission'
 import { TriareDeviceDTO } from '@/src/models/triareDeviceDTO'
 import { colors, shadows, spacing, typography } from '@/src/theme'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 
 
 
 
+/**
+ * Entry screen — device pairing / connection screen.
+ *
+ * Lets the user scan for nearby TRIARE devices and connect to one to begin a
+ * rehabilitation session. Bluetooth permissions are requested here so the user
+ * sees the rationale before any scan is attempted.
+ *
+ * TODO: `ensureBluetoothPermissions()` is currently called directly in the
+ * component body, which means it re-fires on every render. Move it into a
+ * `useEffect` with an empty dependency array so it runs only once on mount.
+ */
 const Index = () => {
 
   const {
@@ -24,9 +35,10 @@ const Index = () => {
     startScan,
     stopScan,
     connect
-  } = useBluetoothConnection(realBluetoothService);
+  } = useBluetoothConnection(BluetoothConnectionHandler.getInstance());
 
-  ensureBluetoothPermissions();
+  // avoid triggering the permission dialog on every re-render.
+  useEffect(() => {ensureBluetoothPermissions();}, [])
 
 
   return (
