@@ -13,6 +13,13 @@ jest.mock("react-native-ble-plx", () => ({
   Device: jest.fn(),
 }));
 
+{/**expo-router Mocking — connect() navigates on success, which would throw
+    outside a mounted navigator */ }
+const mockRouterReplace = jest.fn();
+jest.mock("expo-router", () => ({
+  useRouter: () => ({ replace: mockRouterReplace }),
+}));
+
 {/**
  * Minimal renderHook helper using react-test-renderer.
  * Avoids needing @testing-library/react-native as a dependency.

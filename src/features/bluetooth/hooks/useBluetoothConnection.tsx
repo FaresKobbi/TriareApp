@@ -1,7 +1,10 @@
 import { mapBleDeviceToTriareDeviceDTO, TriareDeviceDTO } from "@/src/models/triareDeviceDTO";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Device } from "react-native-ble-plx";
+import { useBleSessionContext } from "../context/BleSessionContext";
 import { IBluetoothConnectionHandler} from "../handler/IBluetoothConnectionHandler";
+import { BleSession } from "../services/BleSession";
 
 /**
  * Represents the lifecycle of a BLE connection attempt.
@@ -38,6 +41,9 @@ export function useBluetoothConnection(bluetoothService: IBluetoothConnectionHan
     const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
     const [status, setStatus] = useState<ConnectionStatus>("idle");
     const [error, setError] = useState<string | null>(null);
+
+    const router = useRouter();
+    const { setSession } = useBleSessionContext();
 
     /** DTO view of all discovered devices, ready to be rendered by the UI. */
     const triareDevicesDTO: TriareDeviceDTO[] = bleDevices.map(mapBleDeviceToTriareDeviceDTO)
@@ -113,6 +119,10 @@ export function useBluetoothConnection(bluetoothService: IBluetoothConnectionHan
             const connected = await bluetoothService.connectToDevice(device.id);
             setConnectedDevice(connected);
             setStatus("connected");
+
+            const session = new BleSession(connected);
+            setSession(session);
+            router.replace("/(tabs)/speed");
 
             // Temporary diagnostic logging — helps verify the GATT profile during
             // hardware bringup. Remove once service/characteristic UUIDs are confirmed.

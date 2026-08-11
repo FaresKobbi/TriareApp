@@ -1,4 +1,5 @@
 import { BleManager, Device } from "react-native-ble-plx";
+import { TRIARE_SERVICE_UUID } from "../constants/bleUUIDs";
 import { requestBluetoothPermissions } from "../requestBluetoothPermission";
 import { IBluetoothConnectionHandler } from "./IBluetoothConnectionHandler";
 
@@ -35,14 +36,6 @@ export class BluetoothConnectionHandler implements IBluetoothConnectionHandler {
         return BluetoothConnectionHandler.instance;
     }
 
-    /**
-     * UUID of the primary BLE service exposed by the current TRIARE test board (STM32).
-     *
-     * This value is specific to the current development firmware.
-     * TODO: Confirm the final GATT profile with the firmware team and update this
-     * UUID if the service layout changes before production.
-     */
-    private TRIARE_SERVICE_UUID = "00000000-0000-0000-0000-000000000011";
 
     /**
      * Returns true if `device` is likely a TRIARE device.
@@ -58,7 +51,7 @@ export class BluetoothConnectionHandler implements IBluetoothConnectionHandler {
 
         const hasExpectedName = deviceName.includes("STM32") || deviceName.includes("TRIARE");
 
-        const advertisesTriareService = device.serviceUUIDs?.includes(this.TRIARE_SERVICE_UUID) ?? false;
+        const advertisesTriareService = device.serviceUUIDs?.includes(TRIARE_SERVICE_UUID) ?? false;
 
         return hasExpectedName || advertisesTriareService;
     }
