@@ -26,8 +26,8 @@ TriareApp is a React Native (Expo) companion app for the TRIARE rehabilitation t
 │   ├── connection_lost.tsx     # Shown on unexpected disconnect
 │   └── (tabs)/
 │       ├── _layout.tsx         # Bottom-tab layout
-│       ├── speed.tsx           # Speed dashboard (primary screen)
-│       ├── resistance.tsx      # Resistance controls
+│       ├── speed.tsx           # Speed dashboard (currently a protocol test UI)
+│       ├── resistance.tsx      # Resistance controls (blocked on protocol gap, see BLE_PROTOCOL.md)
 │       └── settings.tsx        # App settings
 │
 ├── src/
@@ -36,7 +36,7 @@ TriareApp is a React Native (Expo) companion app for the TRIARE rehabilitation t
 │   ├── models/                 # DTO types and mappers
 │   └── theme/                  # Design tokens (colors, typography, spacing …)
 │
-└── __tests__/                  # Jest unit tests (mirrors src/ structure)
+└── __tests__/                  # Jest tests (unit/ + integration/, mirrors src/)
 ```
 
 ## Routing & Navigation
@@ -81,7 +81,8 @@ src/features/bluetooth/
 │   └── BleSessionContext.tsx             # React Context + Provider + hooks
 ├── hooks/
 │   ├── useBluetoothConnection.tsx        # Scan / connect lifecycle
-│   └── useBasicCommunication.ts          # Read, write, subscribe hook
+│   ├── useMotorControl.ts                # Typed motor commands + telemetry state
+│   └── useBasicCommunication.ts          # Raw read, write, subscribe (diagnostics)
 ├── utils/
 │   └── base64.ts                         # base64 ↔ Uint8Array helpers
 ├── IBleCharacteristicManager.ts          # GATT-layer contract (real + mock impls)
@@ -171,8 +172,13 @@ The app has no global state library. State is managed at two levels:
 |---|---|
 | BLE session (cross-screen) | React Context (`BleSessionContext`) |
 | Connection lifecycle | `useState` inside `useBluetoothConnection` |
-| Characteristic data | `useState` inside `useBasicCommunication` |
+| Motor command status / last telemetry sample | `useState` inside `useMotorControl` |
+| Characteristic data (diagnostics) | `useState` inside `useBasicCommunication` |
 | UI-local state | `useState` in individual components |
+
+`useMotorControl` holds only the *latest* telemetry sample. A live dashboard
+will need a rolling buffer shared across screens — at that point a small store
+(e.g. Zustand) is the expected evolution of this table.
 
 ## UI & Theme System
 
