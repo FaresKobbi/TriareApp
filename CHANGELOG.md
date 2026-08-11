@@ -1,3 +1,20 @@
+# [1.3.0](https://github.com/FaresKobbi/TriareApp/compare/v1.2.0...v1.3.0) (2026-08-11)
+
+
+### Bug Fixes
+
+* bad bluetoothConnectionHandler impor ([8578f30](https://github.com/FaresKobbi/TriareApp/commit/8578f302d6106d6e18502a65000fd08dcf02883b))
+
+
+### Features
+
+* add ble protocol communication ([34e8b02](https://github.com/FaresKobbi/TriareApp/commit/34e8b026745f57988002e1a2f9ed693f0883e92f))
+* add ble protocol communication merged in main ([0c66d39](https://github.com/FaresKobbi/TriareApp/commit/0c66d390a387ca742f6d4ffd604b54b158994d7d))
+* **ble:** add BleCharacteristicManager ([04b7c0e](https://github.com/FaresKobbi/TriareApp/commit/04b7c0e2edb7229211fbae66b33573a3b1490f3f))
+* **ble:** add per-connection session layer with context and basic communication ([d1164a1](https://github.com/FaresKobbi/TriareApp/commit/d1164a12aa75b2b1f4ec4cfee04c9ff190cf06cb))
+* **ble:** expose useMotorControl hook for the motor test screen ([9dc1ec7](https://github.com/FaresKobbi/TriareApp/commit/9dc1ec73ce553777657f13563c08e399ebc59a98))
+* **ble:** implement WBA65 TRIARE command protocol layer ([9fdfa9e](https://github.com/FaresKobbi/TriareApp/commit/9fdfa9e9be68d523e924e36feec2919de40d69f9))
+
 # [1.2.0](https://github.com/FaresKobbi/TriareApp/compare/v1.1.0...v1.2.0) (2026-05-29)
 
 
