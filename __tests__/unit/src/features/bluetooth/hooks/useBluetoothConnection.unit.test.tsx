@@ -1,16 +1,23 @@
+import { IBluetoothConnectionHandler } from "@/src/features/bluetooth/handler/IBluetoothConnectionHandler";
+import { useBluetoothConnection } from "@/src/features/bluetooth/hooks/useBluetoothConnection";
 import React, { act } from "react";
 import { Device } from "react-native-ble-plx";
 import { create } from "react-test-renderer";
-import { useBluetoothConnection } from "@/src/features/bluetooth/hooks/useBluetoothConnection";
-import { IBluetoothService } from "@/src/features/bluetooth/IBluetoothService";
 
 
-{/**SETUP */}
+{/**SETUP */ }
 
-{/**react-native-ble-plx Mocking */}
+{/**react-native-ble-plx Mocking */ }
 jest.mock("react-native-ble-plx", () => ({
   BleManager: jest.fn(),
   Device: jest.fn(),
+}));
+
+{/**expo-router Mocking — connect() navigates on success, which would throw
+    outside a mounted navigator */ }
+const mockRouterReplace = jest.fn();
+jest.mock("expo-router", () => ({
+  useRouter: () => ({ replace: mockRouterReplace }),
 }));
 
 {/**
@@ -46,8 +53,8 @@ function renderHook<T>(hookFn: () => T) {
 }
 
 
-{/**IBluetoothService mock factory*/}
-function createMockBluetoothService(): jest.Mocked<IBluetoothService> {
+{/**IBluetoothConnectionHandler mock factory*/ }
+function createMockBluetoothService(): jest.Mocked<IBluetoothConnectionHandler> {
   return {
     scanForTriareDevice: jest.fn(),
     stopScan: jest.fn(),
@@ -56,7 +63,7 @@ function createMockBluetoothService(): jest.Mocked<IBluetoothService> {
 }
 
 
-{/**Reusable mock BLE Device factory */}
+{/**Reusable mock BLE Device factory */ }
 function createMockDevice(overrides: Partial<Device> = {}): Device {
   return {
     id: "device-1",
@@ -70,7 +77,7 @@ function createMockDevice(overrides: Partial<Device> = {}): Device {
 }
 
 
-let mockBluetoothService: jest.Mocked<IBluetoothService>;
+let mockBluetoothService: jest.Mocked<IBluetoothConnectionHandler>;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -83,7 +90,7 @@ afterEach(() => {
 });
 
 
-{/**TEST */}
+{/**TEST */ }
 
 describe("useBluetoothConnection initial state", () => {
   it("should start with idle status and empty devices", () => {

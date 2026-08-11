@@ -4,7 +4,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { colors, radius, spacing } from "@/src/theme";
 
 type AppCardGradientProps = ComponentProps<typeof LinearGradient> & {
+  /** Style applied to the inner `LinearGradient` element. */
   style?: StyleProp<ViewStyle>;
+  /**
+   * Style applied to the outer `View` wrapper.
+   * The wrapper exists to clip the gradient to the card's border radius on Android,
+   * where `overflow: "hidden"` on a `LinearGradient` alone is unreliable.
+   */
   containerStyle?: StyleProp<ViewStyle>;
 };
 
