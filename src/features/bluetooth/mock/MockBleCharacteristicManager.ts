@@ -36,6 +36,8 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
   systemEnabled = false;
   lastTargetErpm: number | null = null;
   lastTargetDuty: number | null = null;
+  /** Simulated gear ratio (crank teeth ÷ motor teeth). Default matches firmware boot value. */
+  gearRatio = 1.0;
   /** Every command frame received on the TX characteristic, in order. */
   receivedFrames: Uint8Array[] = [];
 
@@ -116,6 +118,20 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
         this.lastTargetErpm = null;
         this.lastTargetDuty = null;
         return Uint8Array.of(TriareOpcode.ACK, opcode);
+      case TriareOpcode.CALIBRATE_CRANK:
+        this.telemetry = { ...this.telemetry, crankAngleDeg: 0 };
+        return Uint8Array.of(TriareOpcode.ACK, opcode);
+      case TriareOpcode.SET_GEAR_RATIO: {
+        const ratio = this.readFloat32(frame);
+        if (!(ratio > 0) || !Number.isFinite(ratio)) {
+          // Mirrors real firmware: invalid value gets no response at all.
+          return null;
+        }
+        this.gearRatio = ratio;
+        this.telemetry = { ...this.telemetry, crankAngleDeg: 0 };
+        return Uint8Array.of(TriareOpcode.ACK, opcode);
+      }
+
       case TriareOpcode.REQ_TELEMETRY: {
         const resp = new Uint8Array(22);
         const view = new DataView(resp.buffer);

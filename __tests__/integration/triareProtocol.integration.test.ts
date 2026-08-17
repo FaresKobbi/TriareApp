@@ -26,6 +26,13 @@ describe("TRIARE protocol end-to-end against the firmware simulator", () => {
     await service.enable();
     expect(firmware.systemEnabled).toBe(true);
 
+    // Gear ratio calibration
+    await service.setGearRatio(2.0);
+    expect(firmware.gearRatio).toBe(2.0);
+    await service.calibrateCrank();
+    expect(firmware.telemetry.crankAngleDeg).toBe(0);
+
+
     // Closed-loop RPM mode
     await service.setRpm(1000);
     expect(firmware.lastTargetErpm).toBe(1000);

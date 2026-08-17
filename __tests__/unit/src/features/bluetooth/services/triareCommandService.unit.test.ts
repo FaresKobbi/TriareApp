@@ -53,12 +53,34 @@ describe("TriareCommandService ACK-framed commands", () => {
     await service.setDuty(-0.5);
     expect(manager.lastTargetDuty).toBe(-0.5);
   });
+  
 
   it("setDuty() rejects out-of-range values without writing anything", async () => {
     await expect(service.setDuty(1.5)).rejects.toBeInstanceOf(RangeError);
     expect(manager.receivedFrames).toHaveLength(0);
   });
 });
+
+ it("calibrateCrank() resolves on ACK and zeroes the crank angle", async () => {
+    manager.telemetry = { ...manager.telemetry, crankAngleDeg: 123 };
+    await service.calibrateCrank();
+    expect(manager.telemetry.crankAngleDeg).toBe(0);
+    expect(manager.receivedFrames).toEqual([Uint8Array.of(TriareOpcode.CALIBRATE_CRANK)]);
+  });
+
+  it("setGearRatio() sends the ratio as little-endian float32 and resolves on ACK", async () => {
+    await service.setGearRatio(2.0);
+    expect(manager.gearRatio).toBe(2.0);
+    expect(manager.receivedFrames[0]).toEqual(
+      Uint8Array.of(TriareOpcode.SET_GEAR_RATIO, 0x00, 0x00, 0x00, 0x40)
+    );
+  });
+
+  it("setGearRatio() also zeroes the crank angle as a side effect", async () => {
+    manager.telemetry = { ...manager.telemetry, crankAngleDeg: 90 };
+    await service.setGearRatio(1.5);
+    expect(manager.telemetry.crankAngleDeg).toBe(0);
+  });
 
 describe("TriareCommandService data commands", () => {
   it("requestTelemetry() resolves with parsed telemetry", async () => {
@@ -107,6 +129,22 @@ describe("TriareCommandService error paths", () => {
     // The write itself did go out — only the response is missing.
     expect(manager.receivedFrames).toHaveLength(1);
   });
+
+    it.each([0, -5, NaN, Infinity, -Infinity])(
+    "rejects setGearRatio(%p) with AckTimeoutError — firmware stays silent on invalid values",
+    async (invalidRatio) => {
+      jest.useFakeTimers();
+
+      const pending = service.setGearRatio(invalidRatio);
+      pending.catch(() => {});
+      await jest.advanceTimersByTimeAsync(ACK_TIMEOUT_MS);
+
+      await expect(pending).rejects.toBeInstanceOf(AckTimeoutError);
+      // The write did go out — only the response is missing, same as real firmware.
+      expect(manager.receivedFrames).toHaveLength(1);
+      expect(manager.gearRatio).toBe(1.0); // unchanged — the invalid value was rejected
+    }
+  );
 
   it("rejects with UnexpectedFrameError when the response is not the expected ACK", async () => {
     manager.respondToCommands = false;

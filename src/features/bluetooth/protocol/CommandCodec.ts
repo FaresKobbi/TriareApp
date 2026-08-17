@@ -24,6 +24,16 @@ export interface CommandCodec {
   encodeStop(): Uint8Array;
   encodeRequestTelemetry(): Uint8Array;
 
+  /** No payload. Zeroes the crank angle at the current position. */
+  encodeCalibrateCrank(): Uint8Array;
+  /**
+   * @param ratio Gear ratio (crank teeth ÷ motor teeth). Must be > 0 and finite.
+   * Firmware sends no response at all (not even a NACK) for an invalid value —
+   * surfaces as AckTimeoutError, same as SET_RPM/SET_DUTY while disarmed.
+   * Re-zeroes the crank angle as a side effect on success.
+   */
+   encodeSetGearRatio(ratio: number): Uint8Array;
+
   /** Never throws on malformed input — returns an `unrecognized` frame instead. */
   decode(frame: Uint8Array): DecodedFrame;
 }

@@ -53,6 +53,17 @@ describe("TriareVescCodec.encode", () => {
     expect(() => codec.encodeSetDuty(NaN)).toThrow(RangeError);
   });
 
+  it("encodes CALIBRATE_CRANK as a single opcode byte", () => {
+    expect(codec.encodeCalibrateCrank()).toEqual(Uint8Array.of(0x17));
+  });
+
+  it("encodes SET_GEAR_RATIO as opcode + little-endian float32, matching struct.pack('<f')", () => {
+    // python: struct.pack('<f', 2.0) == b'\x00\x00\x00\x40'
+    expect(codec.encodeSetGearRatio(2.0)).toEqual(
+      Uint8Array.of(0x18, 0x00, 0x00, 0x00, 0x40)
+    );
+  });
+
   it("encodes ECHO as opcode + payload bytes", () => {
     const payload = new TextEncoder().encode("triare-ble");
     const frame = codec.encodeEcho(payload);
@@ -103,7 +114,7 @@ describe("TriareVescCodec.decode", () => {
   });
 
   it("round-trips every ACK-framed opcode", () => {
-    for (const opcode of [0x10, 0x11, 0x12, 0x15, 0x16]) {
+    for (const opcode of [0x10, 0x11, 0x12, 0x15, 0x16, 0x17, 0x18]) {
       expect(codec.decode(Uint8Array.of(0x14, opcode))).toEqual({
         kind: "ack",
         ackedOpcode: opcode,

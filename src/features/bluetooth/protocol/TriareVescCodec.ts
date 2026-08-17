@@ -62,6 +62,14 @@ export class TriareVescCodec implements CommandCodec {
     return opcodeOnly(TriareOpcode.STOP);
   }
 
+  encodeCalibrateCrank(): Uint8Array {
+   return opcodeOnly(TriareOpcode.CALIBRATE_CRANK);
+  }
+
+  encodeSetGearRatio(ratio: number): Uint8Array {
+   return opcodeWithFloat32(TriareOpcode.SET_GEAR_RATIO, ratio);
+  }
+
   encodeRequestTelemetry(): Uint8Array {
     return opcodeOnly(TriareOpcode.REQ_TELEMETRY);
   }

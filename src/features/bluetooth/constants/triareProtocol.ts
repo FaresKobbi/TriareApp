@@ -29,6 +29,13 @@ export const TriareOpcode = {
   SET_DUTY: 0x15,
   /** No payload. Freewheels the motor; system stays armed. ACK framing. */
   STOP: 0x16,
+  /** No payload. Zeroes the crank angle at the current position. ACK framing. */
+  CALIBRATE_CRANK: 0x17,
+  /**
+   * Payload: 1× LE float32 (crank teeth ÷ motor teeth). ACK framing on success.
+   * Rejected silently (no response at all) if ≤ 0 or non-finite.
+   */
+  SET_GEAR_RATIO: 0x18,
 
   // TODO(protocol gap): the requirements include pedal resistance zone
   // configuration, but the current firmware protocol (triare_host_ble.py)

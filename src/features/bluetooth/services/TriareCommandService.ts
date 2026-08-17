@@ -85,6 +85,22 @@ export class TriareCommandService {
     await this.sendExpectingAck(this.codec.encodeSetDuty(duty));
   }
 
+  /** Zeroes the crank angle at the current pedal position. */
+  async calibrateCrank(): Promise<void> {
+    await this.sendExpectingAck(this.codec.encodeCalibrateCrank());
+  }
+
+  /**
+   * Sets the gear ratio (crank teeth ÷ motor teeth). Must be > 0 and finite.
+   * Also re-zeroes the crank angle on success, same as calibrateCrank().
+   * An invalid value gets no response at all from the firmware — this
+   * surfaces as AckTimeoutError, not a distinct rejection error.
+   */
+  async setGearRatio(ratio: number): Promise<void> {
+    await this.sendExpectingAck(this.codec.encodeSetGearRatio(ratio));
+  }
+
+
   async requestTelemetry(): Promise<TelemetryData> {
     const request = this.codec.encodeRequestTelemetry();
     const frame = await this.send(request);
