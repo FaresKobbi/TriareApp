@@ -87,6 +87,20 @@ describe("useMotorControl", () => {
     expect(result.current!.telemetry).toEqual(firmware.telemetry);
   });
 
+  it("calibrateCrank() and setGearRatio() delegate to the command service", async () => {
+    const firmware = new MockBleCharacteristicManager();
+    const session = createMockSession(firmware);
+    const { result } = renderHook(() => useMotorControl(session));
+
+    await act(async () => {
+      await result.current!.setGearRatio(2.0);
+      await result.current!.calibrateCrank();
+    });
+
+    expect(firmware.gearRatio).toBe(2.0);
+    expect(firmware.telemetry.crankAngleDeg).toBe(0);
+  });
+
   it("surfaces the ACK timeout as an error", async () => {
     const firmware = new MockBleCharacteristicManager();
     firmware.respondToCommands = false;

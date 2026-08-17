@@ -60,6 +60,13 @@ export function useMotorControl(session: BleSession | null) {
   /** Sets the duty cycle in [-1.0, 1.0]; negative reverses the motor. */
   const setDuty = useCallback((duty: number) => run((c) => c.setDuty(duty)), [run]);
 
+  /** Zeroes the crank angle at the current pedal position. */
+  const calibrateCrank = useCallback(() => run((c) => c.calibrateCrank()), [run]);
+
+  /** Sets the gear ratio (crank teeth ÷ motor teeth); also re-zeroes the crank angle. */
+  const setGearRatio = useCallback((ratio: number) => run((c) => c.setGearRatio(ratio)), [run]);
+
+
   /** Fetches one telemetry sample and stores it in `telemetry`. */
   const requestTelemetry = useCallback(
     () =>
@@ -77,6 +84,8 @@ export function useMotorControl(session: BleSession | null) {
     stop,
     setRpm,
     setDuty,
+    calibrateCrank,
+    setGearRatio,
     requestTelemetry,
     /** Last telemetry sample of this session, or null. */
     telemetry,
