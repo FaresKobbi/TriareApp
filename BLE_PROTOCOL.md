@@ -1,12 +1,16 @@
 # TRIARE BLE Protocol (WBA65 firmware)
 
 > **Status:** Current, confirmed against the reference host script `triare_host_ble.py`
-> (kept in this repo), which runs this command set against real firmware.
-> This supersedes the earlier STM32WB0 echo-test notes
-> (`TRIARE_BLE_STM32WB0_Communication_Notes.docx`): the old
-> `00000000-…` UUIDs and single-byte echo scheme are obsolete. The general
+> (kept in this repo) and the operational GUI `triare_ble_interface.py`, both of
+> which run this command set against real firmware. This supersedes the earlier
+> STM32WB0 echo-test notes (`TRIARE_BLE_STM32WB0_Communication_Notes.docx`): the
+> old `00000000-…` UUIDs and single-byte echo scheme are obsolete. The general
 > BLE/GATT background from those notes (roles, MTU, write-without-response
 > semantics, Android permission flow) remains valid and is summarized at the end.
+>
+> **Update [DATA]:** added crank calibration / gear ratio commands
+> (`0x17`, `0x18`) and the resulting telemetry frame change (18 → 22 bytes).
+> Firmware source of truth: `app_triare.c/h` + `p2p_server_app.c`.
 
 ## Advertising
 
@@ -40,10 +44,12 @@ payloads are IEEE-754 **float32, little-endian** (`struct.pack('<f')`).
 | `0x10` | SYSTEM_ENABLE | none | `[0x14, 0x10]` — arms system, motor freewheels |
 | `0x11` | SYSTEM_DISABLE | none | `[0x14, 0x11]` — disarms system |
 | `0x12` | SET_RPM | 1× f32 target ERPM | `[0x14, 0x12]` — requires enabled system |
-| `0x13` | REQ_TELEMETRY | none | 18-byte telemetry frame (below) |
+| `0x13` | REQ_TELEMETRY | none | 22-byte telemetry frame (below) |
 | `0x14` | ACK | — | Generic ack opcode; only appears in responses |
 | `0x15` | SET_DUTY | 1× f32 in [−1.0, 1.0] | `[0x14, 0x15]` — negative reverses the motor |
 | `0x16` | STOP | none | `[0x14, 0x16]` — freewheels motor, system **stays armed** |
+| `0x17` | CALIBRATE_CRANK | none | `[0x14, 0x17]` — zeroes crank angle at current position |
+| `0x18` | SET_GEAR_RATIO | 1× f32 (crank teeth ÷ motor teeth) | `[0x14, 0x18]` — rejected (no response) if ≤ 0 or non-finite |
 
 ### Framing convention
 
@@ -55,8 +61,14 @@ payloads are IEEE-754 **float32, little-endian** (`struct.pack('<f')`).
 - **Timeout:** if no notification arrives within **3 s** (`ACK_TIMEOUT` in the
   reference script, `ACK_TIMEOUT_MS` in the app), the command failed with an
   unknown outcome — surfaced as `AckTimeoutError`.
+- **`SET_RPM` / `SET_DUTY` while disarmed:** firmware sends **no response at
+  all** (not even a NACK) — this is indistinguishable from a lost packet and
+  will surface as `AckTimeoutError`. The app must not send motion commands
+  before `SYSTEM_ENABLE` has been ACKed.
+- **`SET_GEAR_RATIO` with an invalid value** (`≤ 0`, `NaN`, `Infinity`)
+  behaves the same way — silently no response, same `AckTimeoutError` path.
 
-### Telemetry frame layout (18 bytes)
+### Telemetry frame layout (22 bytes)
 
 | Offset | Type | Field |
 |---|---|---|
@@ -65,7 +77,27 @@ payloads are IEEE-754 **float32, little-endian** (`struct.pack('<f')`).
 | 5 | f32 LE | motor current (A) |
 | 9 | f32 LE | battery voltage (V) |
 | 13 | f32 LE | FET temperature (°C) |
-| 17 | u8 | VESC fault code (0 = none) |
+| 17 | f32 LE | **crank angle (degrees, 0–360)** — new field |
+| 21 | u8 | VESC fault code (0 = none) — **offset moved from 17 to 21** |
+
+> ⚠️ If the current parser hardcodes a 17- or 18-byte frame length, or reads
+> the fault byte at a fixed offset of 16/17, it will silently read garbage
+> once the firmware sends the new 22-byte frame. Update the frame length
+> check and the fault byte offset together with adding the new field.
+
+### Crank angle semantics
+
+- Reported angle is **already in degrees** (0–360), no client-side conversion
+  needed.
+- Angle is computed by the firmware from the VESC tachometer, scaled by the
+  gear ratio set via `SET_GEAR_RATIO`. Default gear ratio at boot is `1.0`
+  (direct motor drive, no reduction) until the app or another client sets it.
+- Left pedal = reported angle. Right pedal = reported angle `+ 180°` (always
+  opposite), same convention as `triare_ble_interface.py`'s dial.
+- Calling `SET_GEAR_RATIO` re-zeroes the crank angle as a side effect (avoids
+  a visual jump) — if the UI shows a "calibrated" indicator, treat a
+  successful `SET_GEAR_RATIO` ACK as also clearing it, same as
+  `CALIBRATE_CRANK`.
 
 ## Pairing / identification (open item)
 
@@ -86,15 +118,21 @@ characteristic and via `CMD_GET_DEVEUI`.
    active-brake command**, so "abrupt stop" has no clean mapping; candidates
    are `SET_DUTY(0)` / `SET_RPM(0)` (actively regulate toward zero) or
    `SYSTEM_DISABLE`. **Assumption to confirm with the firmware team.**
-3. **Failure responses are undocumented.** The script hints that motion
-   commands sent while disarmed get a non-ACK response, but its shape is
-   unknown. The app treats any non-expected response as `UnexpectedFrameError`.
+3. **Failure responses are undocumented** beyond "no response at all" (see
+   Framing convention above) — confirmed for `SET_RPM`/`SET_DUTY` while
+   disarmed and for `SET_GEAR_RATIO` with an invalid value. Treat any
+   silence past the ACK timeout as a rejection, not just a lost packet.
 4. **Fault byte values are undocumented** beyond 0 = no fault (VESC fault codes).
 5. **No battery percentage** — only pack voltage; and **no ERPM → wheel-speed
    conversion parameters** (needs motor pole count / gearing / wheel diameter
    to display km/h).
 6. **MTU:** all protocol frames fit the default 23-byte MTU (20-byte payload),
-   except ECHO payloads > 19 bytes — avoid them, or negotiate a larger MTU first.
+   **except the new 22-byte telemetry frame**, which needs 23 bytes of ATT
+   payload (1 opcode + 22 data bytes) — this **exceeds the default 20-byte
+   write payload** of a 23-byte MTU connection. Negotiate a larger MTU
+   (e.g. request 27+ bytes) before relying on `REQ_TELEMETRY`, or confirm
+   `react-native-ble-plx` is already negotiating this — otherwise telemetry
+   notifications may arrive truncated.
 
 ## General BLE/GATT background (still valid from the old notes)
 
