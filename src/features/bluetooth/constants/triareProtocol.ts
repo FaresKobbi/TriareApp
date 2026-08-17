@@ -43,8 +43,13 @@ export const ACK_TIMEOUT_MS = 3000;
 
 export const DEVEUI_LENGTH = 8;
 
-/** Telemetry frame: opcode + 4× float32 (rpm, current, voltage, temp) + fault byte. */
-export const TELEMETRY_FRAME_LENGTH = 18;
+/**
+* Telemetry frame: opcode + 4× float32 (rpm, current, voltage, temp)
+* + 1× float32 crank angle (degrees, 0–360) + fault byte.
+* Grew from 18 → 22 bytes when crank angle was added; fault byte offset
+* moved from 17 to 21 as a result.
+*/
+export const TELEMETRY_FRAME_LENGTH = 22;
 
 export const DUTY_MIN = -1.0;
 export const DUTY_MAX = 1.0;

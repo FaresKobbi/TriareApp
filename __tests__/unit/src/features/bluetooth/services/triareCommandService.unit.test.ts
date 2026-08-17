@@ -62,12 +62,13 @@ describe("TriareCommandService ACK-framed commands", () => {
 
 describe("TriareCommandService data commands", () => {
   it("requestTelemetry() resolves with parsed telemetry", async () => {
-    manager.telemetry = { rpm: 1200, current: 4.5, voltage: 36.5, temp: 41.25, fault: 2 };
+    manager.telemetry = { rpm: 1200, current: 4.5, voltage: 36.5, temp: 41.25, crankAngleDeg: 45, fault: 2 };
     await expect(service.requestTelemetry()).resolves.toEqual({
       rpm: 1200,
       current: 4.5,
       voltage: 36.5,
       temp: 41.25,
+      crankAngleDeg: 45,
       fault: 2,
     });
   });

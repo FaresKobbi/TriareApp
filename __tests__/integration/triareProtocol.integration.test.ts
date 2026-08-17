@@ -31,7 +31,7 @@ describe("TRIARE protocol end-to-end against the firmware simulator", () => {
     expect(firmware.lastTargetErpm).toBe(1000);
 
     // Telemetry reflects firmware state
-    firmware.telemetry = { rpm: 995.5, current: 3.25, voltage: 36.75, temp: 40.5, fault: 0 };
+    firmware.telemetry = { rpm: 995.5, current: 3.25, voltage: 36.75, temp: 40.5, crankAngleDeg: 180, fault: 0 };
     const telemetry = await service.requestTelemetry();
     expect(telemetry).toEqual(firmware.telemetry);
 

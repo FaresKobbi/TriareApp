@@ -3,18 +3,19 @@ import { TriareVescCodec } from "@/src/features/bluetooth/protocol/TriareVescCod
 
 const codec = new TriareVescCodec();
 
-/** Builds a valid 18-byte telemetry frame the way the firmware does. */
+/** Builds a valid 22-byte telemetry frame the way the firmware does. */
 function buildTelemetryFrame(
-  rpm: number, current: number, voltage: number, temp: number, fault: number
+  rpm: number, current: number, voltage: number, temp: number, crankAngleDeg: number, fault: number
 ): Uint8Array {
-  const frame = new Uint8Array(18);
+  const frame = new Uint8Array(22);
   const view = new DataView(frame.buffer);
   frame[0] = TriareOpcode.REQ_TELEMETRY;
   view.setFloat32(1, rpm, true);
   view.setFloat32(5, current, true);
   view.setFloat32(9, voltage, true);
   view.setFloat32(13, temp, true);
-  frame[17] = fault;
+  view.setFloat32(17, crankAngleDeg, true);
+  frame[21] = fault;
   return frame;
 }
 
@@ -83,19 +84,19 @@ describe("TriareVescCodec.decode", () => {
     if (decoded.kind === "echo") expect(decoded.payload).toEqual(payload);
   });
 
-  it("decodes telemetry frames (floats at offsets 1/5/9/13, fault at 17)", () => {
-    const decoded = codec.decode(buildTelemetryFrame(1000, 12.5, 36.5, 42.25, 3));
+  it("decodes telemetry frames (floats at offsets 1/5/9/13/17, fault at 21)", () => {
+    const decoded = codec.decode(buildTelemetryFrame(1000, 12.5, 36.5, 42.25, 90, 3));
     expect(decoded).toEqual({
       kind: "telemetry",
-      telemetry: { rpm: 1000, current: 12.5, voltage: 36.5, temp: 42.25, fault: 3 },
+      telemetry: { rpm: 1000, current: 12.5, voltage: 36.5, temp: 42.25, crankAngleDeg: 90, fault: 3 },
     });
   });
 
   it("decodes telemetry from a view into a larger buffer (non-zero byteOffset)", () => {
     // Simulates a frame arriving inside a larger native buffer.
-    const padded = new Uint8Array(24);
-    padded.set(buildTelemetryFrame(500, 1, 36, 25, 0), 4);
-    const view = padded.subarray(4, 22);
+    const padded = new Uint8Array(28);
+    padded.set(buildTelemetryFrame(500, 1, 36, 25, 0, 0), 4);
+    const view = padded.subarray(4, 26);
     const decoded = codec.decode(view);
     expect(decoded.kind).toBe("telemetry");
     if (decoded.kind === "telemetry") expect(decoded.telemetry.rpm).toBe(500);
@@ -114,7 +115,7 @@ describe("TriareVescCodec.decode", () => {
     ["empty frame", new Uint8Array(0)],
     ["ACK missing echoed opcode", Uint8Array.of(0x14)],
     ["DevEUI frame too short", Uint8Array.of(0x01, 0xaa, 0xbb)],
-    ["telemetry frame too short", buildTelemetryFrame(0, 0, 0, 0, 0).slice(0, 17)],
+    ["telemetry frame too short", buildTelemetryFrame(0, 0, 0, 0, 0, 0).slice(0, 21)],
     ["unknown opcode", Uint8Array.of(0xff, 0x01, 0x02)],
   ])("returns an unrecognized frame instead of throwing: %s", (_name, raw) => {
     const decoded = codec.decode(raw);

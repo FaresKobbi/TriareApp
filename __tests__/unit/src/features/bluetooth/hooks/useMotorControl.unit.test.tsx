@@ -76,7 +76,7 @@ describe("useMotorControl", () => {
 
   it("stores the latest telemetry sample", async () => {
     const firmware = new MockBleCharacteristicManager();
-    firmware.telemetry = { rpm: 750, current: 2.5, voltage: 36.5, temp: 39.25, fault: 0 };
+    firmware.telemetry = { rpm: 750, current: 2.5, voltage: 36.5, temp: 39.25, crankAngleDeg: 270, fault: 0 };
     const session = createMockSession(firmware);
     const { result } = renderHook(() => useMotorControl(session));
 

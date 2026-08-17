@@ -94,7 +94,8 @@ export class TriareVescCodec implements CommandCodec {
           current: view.getFloat32(5, true),
           voltage: view.getFloat32(9, true),
           temp: view.getFloat32(13, true),
-          fault: frame[17],
+          crankAngleDeg: view.getFloat32(17, true),
+          fault: frame[21],
         },
       };
     }

@@ -23,7 +23,14 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
   respondToCommands = true;
 
   devEui = Uint8Array.of(0x00, 0x80, 0xe1, 0x2c, 0x00, 0x00, 0x10, 0x8f);
-  telemetry: TelemetryData = { rpm: 0, current: 0, voltage: 36.0, temp: 25.0, fault: 0 };
+  telemetry: TelemetryData = {
+   rpm: 0,
+   current: 0,
+   voltage: 36.0,
+   temp: 25.0,
+   crankAngleDeg: 0,
+   fault: 0,
+ };
 
   /** Simulated firmware state, inspectable by tests. */
   systemEnabled = false;
@@ -110,14 +117,15 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
         this.lastTargetDuty = null;
         return Uint8Array.of(TriareOpcode.ACK, opcode);
       case TriareOpcode.REQ_TELEMETRY: {
-        const resp = new Uint8Array(18);
+        const resp = new Uint8Array(22);
         const view = new DataView(resp.buffer);
         resp[0] = opcode;
         view.setFloat32(1, this.telemetry.rpm, true);
         view.setFloat32(5, this.telemetry.current, true);
         view.setFloat32(9, this.telemetry.voltage, true);
         view.setFloat32(13, this.telemetry.temp, true);
-        resp[17] = this.telemetry.fault;
+        view.setFloat32(17, this.telemetry.crankAngleDeg, true);
+        resp[21] = this.telemetry.fault;
         return resp;
       }
       default:
