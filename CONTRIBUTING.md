@@ -27,7 +27,10 @@ Make sure the following tools are installed on your machine:
 - [Node.js](https://nodejs.org/) (the project CI uses Node 22 — use the same version locally to avoid surprises)
 - [npm](https://www.npmjs.com/) (comes with Node.js)
 - [Git](https://git-scm.com/)
-- [Expo Go](https://expo.dev/go) on your physical device, **or** an Android/iOS emulator
+- JDK 17 (17 to 24 work; **25 does not**), the Android SDK and a physical Android phone — only needed to run the app itself, not to run lint or tests
+
+> **The app cannot run in Expo Go, an emulator or a browser.** It uses native Bluetooth Low Energy (`react-native-ble-plx`), so you need a *development build* on a real phone. The full, per-OS setup (Windows, Linux, macOS) is in [README.md](README.md) and [WINDOWS_DEV_SETUP.md](WINDOWS_DEV_SETUP.md).
+> If you only want to change code and run `npm run lint`, `npm run typecheck` and `npm test`, `npm ci` is enough: tests use an in-memory firmware simulator and need no hardware.
 
 ### Clone and install
 
@@ -40,18 +43,21 @@ npm ci
 > **Why `npm ci` instead of `npm install`?**
 > `npm ci` installs dependencies exactly as specified in `package-lock.json`. This ensures everyone on the team uses the same dependency versions. Use `npm install` only when you intentionally want to add or update a package.
 
-### Start the development server
+### Run the app
+
+The first time (and whenever a native dependency, a plugin or a permission in `app.json` changes), build the development build onto your phone:
+
+```bash
+npx expo run:android --device
+```
+
+After that, day-to-day work only needs the dev server, and hot reload works as usual:
 
 ```bash
 npm start
 ```
 
-This runs `expo start`, which gives you options to open the app in:
-
-- **Expo Go** (scan the QR code on your phone)
-- **Android emulator** (`npm run android`)
-- **iOS simulator** (`npm run ios`)
-- **Web browser** (`npm run web`)
+Open the **TriareApp** development build installed on the phone (not Expo Go). `npm run web` and emulators can show layouts but have no Bluetooth radio, so the board will never be found.
 
 ### After pulling changes
 
@@ -434,11 +440,17 @@ git commit --no-verify -m "your message"
 
 ### Dependency issues after pulling
 
-If you see unexpected errors after pulling, reinstall dependencies:
+If you see unexpected errors after pulling, reinstall dependencies exactly as locked:
 
 ```bash
-npm install
+npm ci
 ```
+
+If the error mentions native code (for example `createClient of null`, or a missing module on the phone), rebuild the development build with `npx expo run:android --device`.
+
+### Hooks fail on Windows
+
+Husky needs Git for Windows. If `npm` is blocked by PowerShell (`npm.ps1 cannot be loaded`), see [WINDOWS_DEV_SETUP.md](WINDOWS_DEV_SETUP.md).
 
 ---
 
