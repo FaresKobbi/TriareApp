@@ -1,5 +1,10 @@
 import { BleSessionProvider } from "@/src/features/bluetooth/context/BleSessionContext";
+import { initLanguage } from "@/src/i18n";
 import { Stack } from "expo-router";
+
+// Starts in the phone's language (Portuguese or English). The user can change
+// it in Settings or on the scan screen.
+initLanguage();
 
 export default function RootLayout() {
   return (

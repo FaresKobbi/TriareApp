@@ -4,10 +4,11 @@ import { AppCardGradient } from '@/src/components/ui/AppCardGradient'
 import { AppDeviceSelector } from '@/src/components/ui/AppDeviceSelector'
 import AppScreen from '@/src/components/ui/AppScreen'
 import { BikeLogo } from '@/src/components/ui/BikeLogo'
+import { LanguageSelector } from '@/src/components/ui/LanguageSelector'
 import { BluetoothConnectionHandler } from '@/src/features/bluetooth/handler/BluetoothConnectionHandler'
 import { useBluetoothConnection } from '@/src/features/bluetooth/hooks/useBluetoothConnection'
 import { ensureBluetoothPermissions } from '@/src/features/bluetooth/requestBluetoothPermission'
-import { TriareDeviceDTO } from '@/src/models/triareDeviceDTO'
+import { useI18n } from '@/src/i18n'
 import { colors, shadows, spacing, typography } from '@/src/theme'
 import React, { useEffect } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -27,6 +28,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native'
  * `useEffect` with an empty dependency array so it runs only once on mount.
  */
 const Index = () => {
+  const { t, tp } = useI18n();
 
   const {
     triareDevicesDTO,
@@ -48,8 +50,11 @@ const Index = () => {
       <AppCard style={styles.titleCard}>
         <BikeLogo surfaceColor={colors.primaryDark} bikeColor={colors.onPrimary}></BikeLogo>
         <View>
-          <Text style={typography.heroTitle}>Triare</Text>
-          <Text style={styles.description}>Rehabilition tricycle control</Text>
+          <Text style={typography.heroTitle}>{t('app.name')}</Text>
+          <Text style={styles.description}>{t('app.tagline')}</Text>
+        </View>
+        <View style={styles.languageBox}>
+          <LanguageSelector compact />
         </View>
       </AppCard>
 
@@ -60,12 +65,12 @@ const Index = () => {
         style={styles.scanningCard}>
 
         <View>
-          <Text style={typography.heroTitle}>Connect a tricycle</Text>
-          <Text style={typography.heroTitle}>to begin a session</Text>
+          <Text style={typography.heroTitle}>{t('home.connectLine1')}</Text>
+          <Text style={typography.heroTitle}>{t('home.connectLine2')}</Text>
         </View>
-        <Text style={[styles.description, styles.scanningCardDescription]}>Make sure the device is powered on and within range. Bluetooth scanning stays active for one minute.</Text>
+        <Text style={[styles.description, styles.scanningCardDescription]}>{t('home.scanHelp')}</Text>
         <AppButton
-          title='Scan for devices'
+          title={t('home.scanButton')}
           textStyle={styles.scanButtonTitle}
           isShadowed={true}
           iconName='search'
@@ -75,8 +80,8 @@ const Index = () => {
 
       {/*Device List*/}
       <View style={styles.devicesCardTitle}>
-        <Text style={[typography.body, { color: colors.textMuted }]}>AVAILABLE DEVICES</Text>
-        {displayDevicesCount(triareDevicesDTO)}
+        <Text style={[typography.body, { color: colors.textMuted }]}>{t('home.availableDevices')}</Text>
+        <Text style={[typography.body, styles.description]}>{tp('home.devicesFound', triareDevicesDTO.length)}</Text>
       </View>
 
       <ScrollView
@@ -93,13 +98,6 @@ const Index = () => {
   )
 }
 
-
-{/** HELPER */ }
-function displayDevicesCount(devices: TriareDeviceDTO[]) {
-  return (
-    <Text style={[typography.body, styles.description]}>{devices.length} found</Text>
-  )
-}
 
 export default Index
 
@@ -120,6 +118,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: colors.onPrimary,
     fontWeight: "bold"
+  },
+
+  languageBox: {
+    flex: 1,
+    alignItems: "flex-end",
   },
 
   titleCard: {

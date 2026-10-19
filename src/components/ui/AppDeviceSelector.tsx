@@ -1,3 +1,4 @@
+import { TranslationKey, useI18n } from "@/src/i18n";
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -23,6 +24,7 @@ export function AppDeviceSelector({
     device,
     onPress
 }: AppDeviceSelectorProps) {
+    const { t } = useI18n();
     return (
         <Pressable
             onPress={onPress}
@@ -30,9 +32,9 @@ export function AppDeviceSelector({
         >
             <BikeLogo surfaceColor={colors.primarySoft} bikeColor={colors.primaryDark}></BikeLogo>
             <View style={styles.infoContainer}>
-                <Text style={[typography.cardTitle, styles.deviceName]}>{device.name ?? "Unknown"}</Text>
+                <Text style={[typography.cardTitle, styles.deviceName]}>{device.name ?? t("device.unknownName")}</Text>
                 <View style={styles.techInfoContainer}>
-                    {signalDisplay(device.rssi)}
+                    {signalDisplay(device.rssi, t)}
                     <BatteryStatusBar level={device.battery}></BatteryStatusBar>
                 </View>
             </View>
@@ -94,12 +96,12 @@ const styles = StyleSheet.create({
  * Renders a coloured dot and label for the given RSSI value, or an "Unknown"
  * indicator when RSSI is not available.
  */
-function signalDisplay(signal: number | null) {
+function signalDisplay(signal: number | null, t: (key: TranslationKey) => string) {
     if (signal === null || signal === undefined) {
         return (
             <View style={styles.signalLevelContainer}>
                 <View style={[styles.signalLevelIndicator, { backgroundColor: colors.textMuted }]}></View>
-                <Text style={{ color: colors.textMuted, fontSize: 12 }}>Unknown signal</Text>
+                <Text style={{ color: colors.textMuted, fontSize: 12 }}>{t("signal.unknown")}</Text>
             </View>
         );
     }
@@ -107,7 +109,7 @@ function signalDisplay(signal: number | null) {
     return (
         <View style={styles.signalLevelContainer}>
             <View style={[styles.signalLevelIndicator, { backgroundColor: signalStrength[1] }]}></View>
-            <Text style={{ color: colors.textMuted, fontSize: 12 }}>{signalStrength[0]} signal</Text>
+            <Text style={{ color: colors.textMuted, fontSize: 12 }}>{t(signalStrength[0])}</Text>
         </View>
     )
 }
@@ -120,16 +122,16 @@ function signalDisplay(signal: number | null) {
  * - ≥ -70 dBm → "Good"   (usable range)
  * -  < -70 dBm → "Weak"   (poor signal, may drop)
  *
- * @returns A tuple of [label, colour hex string].
+ * @returns A tuple of [translation key of the label, colour hex string].
  */
-function getSignalStrength(signal: number): [string, string] {
+function getSignalStrength(signal: number): [TranslationKey, string] {
     if (signal >= -50) {
-        return ["Strong", colors.success]
+        return ["signal.strong", colors.success]
     }
     else if (signal >= -70) {
-        return ["Good", colors.warning]
+        return ["signal.good", colors.warning]
     }
     else {
-        return ["Weak", colors.danger]
+        return ["signal.weak", colors.danger]
     }
 }
