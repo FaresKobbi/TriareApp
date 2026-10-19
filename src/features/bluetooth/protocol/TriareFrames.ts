@@ -19,6 +19,48 @@ export type TelemetryData = {
  crankAngleDeg: number;
   /** VESC fault code. 0 = no fault; other values are not documented in the protocol reference. */
   fault: number;
+  /**
+   * Bitfield of `TelemetryStatus` (armed / emergency stop / driving).
+   * `undefined` when the firmware predates the status byte (22-byte frame).
+   */
+  status?: number;
+  /**
+   * Board clock (ms, wraps at 2^32) at which the motor controller sample was
+   * received. Only stream frames carry it; use differences between samples,
+   * never the absolute value.
+   */
+  timestampMs?: number;
+};
+
+/** One resistance sample pushed by the board while a physiotherapy mode is active. */
+export type ResistanceData = {
+  /** Board clock (ms, wraps at 2^32). Use differences, never the absolute value. */
+  timestampMs: number;
+  /** Current the controller commands, amperes (signed). */
+  commandedCurrent: number;
+  /** Fraction of the assist applied right now, 0–1 (0 = inside a no-assist zone). */
+  assistFactor: number;
+  /** A `ResistMode` byte. */
+  mode: number;
+  /** A `ResistPhase` byte. */
+  phase: number;
+  /** Bitfield of `ResistLimit`. */
+  limitFlags: number;
+  /** Thermal model, % of the continuous current limit (100 = at the limit). */
+  thermalPercent: number;
+};
+
+/** A no-assist/low-assist zone as stored on the board. Angles are crank degrees, 0–360. */
+export type ResistZone = {
+  index: number;
+  startDeg: number;
+  endDeg: number;
+  /** A `ResistZoneType` byte. */
+  type: number;
+  /** Percentage of the assist kept inside the zone, 0–100. */
+  valuePercent: number;
+  /** Width of the smooth edge, degrees. */
+  edgeDeg: number;
 };
 
 /**
@@ -29,7 +71,17 @@ export type TelemetryData = {
  */
 export type DecodedFrame =
   | { kind: "ack"; ackedOpcode: number }
+  /** The firmware refused `rejectedOpcode`; `reason` is a `NackReason` byte (may be unknown to this app). */
+  | { kind: "nack"; rejectedOpcode: number; reason: number }
   | { kind: "devEui"; devEui: Uint8Array }
   | { kind: "echo"; payload: Uint8Array }
   | { kind: "telemetry"; telemetry: TelemetryData }
+  /** One telemetry sample pushed by the board while streaming is on (carries `timestampMs`). */
+  | { kind: "stream"; telemetry: TelemetryData }
+  /** Unsolicited state change from the firmware; `status` is a `TelemetryStatus` bitfield. */
+  | { kind: "status"; status: number }
+  /** Unsolicited resistance sample, sent while a physiotherapy mode is active. */
+  | { kind: "resistance"; resistance: ResistanceData }
+  /** One reply to RESIST_GET. `zone` is null (and `total` 0) when the board has no zones. */
+  | { kind: "resistZone"; zone: ResistZone | null; total: number }
   | { kind: "unrecognized"; raw: Uint8Array };

@@ -1,7 +1,15 @@
 import { DEVEUI_CHAR_UUID, RX_CHAR_UUID, TX_CHAR_UUID } from "../constants/bleUUIDs";
-import { TriareOpcode } from "../constants/triareProtocol";
+import {
+  HOLD_MAX_CURRENT_A,
+  HOLD_MIN_GEAR_RATIO,
+  NackReason,
+  RESIST_MAX_EDGE_DEG,
+  RESIST_MAX_ZONES,
+  ResistMode,
+  TriareOpcode,
+} from "../constants/triareProtocol";
 import { IBleCharacteristicManager } from "../IBleCharacteristicManager";
-import { TelemetryData } from "../protocol/TriareFrames";
+import { ResistanceData, ResistZone, TelemetryData } from "../protocol/TriareFrames";
 import { base64ToBytes, bytesToBase64 } from "../utils/base64";
 
 /**
@@ -38,8 +46,21 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
   lastTargetDuty: number | null = null;
   /** Simulated gear ratio (crank teeth ÷ motor teeth). Default matches firmware boot value. */
   gearRatio = 1.0;
+  /** Test hook: false behaves like firmware that predates CMD_STREAM (it ignores the command). */
+  supportsStream = true;
+  /** True between CMD_STREAM(1) and CMD_STREAM(0). */
+  streaming = false;
   /** Every command frame received on the TX characteristic, in order. */
   receivedFrames: Uint8Array[] = [];
+
+  /** Simulated physiotherapy state, inspectable by tests. */
+  resistMode: number = ResistMode.NONE;
+  holdCurrentA: number | null = null;
+  stagedZones: ResistZone[] = [];
+  activeZones: ResistZone[] = [];
+  resistGains: number[] | null = null;
+  /** Test hook: when false, the physiotherapy commands answer with no response (older firmware). */
+  supportsResistance = true;
 
   private notifyListeners = new Set<(value: string) => void>();
 
@@ -54,7 +75,8 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
     if (!this.respondToCommands) return;
 
     const response = this.handleCommand(frame);
-    if (response) this.notify(response);
+    if (Array.isArray(response)) response.forEach((r) => this.notify(r));
+    else if (response) this.notify(response);
   }
 
   async read(_serviceUUID: string, charUUID: string): Promise<string | null> {
@@ -76,6 +98,37 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
     this.notifyListeners.clear();
   }
 
+  /** Test hook: push one STREAM_FRAME, laid out like the firmware's 27-byte push. */
+  emitStreamFrame(sample: TelemetryData, timestampMs: number, status = 0): void {
+    const frame = new Uint8Array(27);
+    const view = new DataView(frame.buffer);
+    frame[0] = TriareOpcode.STREAM_FRAME;
+    view.setUint32(1, timestampMs >>> 0, true);
+    view.setFloat32(5, sample.rpm, true);
+    view.setFloat32(9, sample.current, true);
+    view.setFloat32(13, sample.voltage, true);
+    view.setFloat32(17, sample.temp, true);
+    view.setFloat32(21, sample.crankAngleDeg, true);
+    frame[25] = sample.fault;
+    frame[26] = status;
+    this.notify(frame);
+  }
+
+  /** Test hook: push one RESIST_FRAME, laid out like the firmware's 20-byte push. */
+  emitResistFrame(sample: ResistanceData): void {
+    const frame = new Uint8Array(20);
+    const view = new DataView(frame.buffer);
+    frame[0] = TriareOpcode.RESIST_FRAME;
+    view.setUint32(1, sample.timestampMs >>> 0, true);
+    view.setFloat32(5, sample.commandedCurrent, true);
+    view.setFloat32(9, sample.assistFactor, true);
+    frame[13] = sample.mode;
+    frame[14] = sample.phase;
+    frame[15] = sample.limitFlags;
+    view.setFloat32(16, sample.thermalPercent, true);
+    this.notify(frame);
+  }
+
   /** Test hook: push an arbitrary raw frame to subscribers (e.g. malformed data). */
   emitRawFrame(frame: Uint8Array): void {
     this.notify(frame);
@@ -90,9 +143,107 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
     });
   }
 
-  private handleCommand(frame: Uint8Array): Uint8Array | null {
+  private nack(opcode: number, reason: number): Uint8Array {
+    return Uint8Array.of(TriareOpcode.NACK, opcode, reason);
+  }
+
+  /** Mirrors the firmware: physiotherapy commands answer with a NACK when refused. */
+  private handleResistCommand(frame: Uint8Array): Uint8Array | Uint8Array[] | null {
     const opcode = frame[0];
+    const ack = Uint8Array.of(TriareOpcode.ACK, opcode);
+    const view = new DataView(frame.buffer, frame.byteOffset, frame.byteLength);
     switch (opcode) {
+      case TriareOpcode.RESIST_MODE: {
+        if (frame.length < 2) return this.nack(opcode, NackReason.INVALID_VALUE);
+        if (!this.systemEnabled) return this.nack(opcode, NackReason.NOT_ARMED);
+        const mode = frame[1];
+        if (mode === ResistMode.BRAKE) return this.nack(opcode, NackReason.NO_REGEN_PATH);
+        if (mode !== ResistMode.NONE && mode !== ResistMode.ASSIST_VALLEY) {
+          return this.nack(opcode, NackReason.INVALID_VALUE);
+        }
+        this.resistMode = mode;
+        if (mode === ResistMode.NONE) this.holdCurrentA = null;
+        return ack;
+      }
+      case TriareOpcode.RESIST_ZONE: {
+        if (frame.length < 16) return this.nack(opcode, NackReason.INVALID_VALUE);
+        const index = frame[1];
+        const startDeg = view.getFloat32(2, true);
+        const endDeg = view.getFloat32(6, true);
+        const type = frame[10];
+        const valuePercent = view.getFloat32(11, true);
+        const edgeDeg = frame[15];
+        let span = endDeg - startDeg;
+        if (span < 0) span += 360;
+        const valid =
+          index < RESIST_MAX_ZONES &&
+          startDeg >= 0 && startDeg <= 360 && endDeg >= 0 && endDeg <= 360 &&
+          span >= 1 && valuePercent >= 0 && valuePercent <= 100 &&
+          edgeDeg <= RESIST_MAX_EDGE_DEG;
+        if (!valid || type !== 0) return this.nack(opcode, type === 1 ? NackReason.NO_REGEN_PATH : NackReason.INVALID_VALUE);
+        this.stagedZones = this.stagedZones.filter((z) => z.index !== index);
+        this.stagedZones.push({ index, startDeg, endDeg, type, valuePercent, edgeDeg });
+        return ack;
+      }
+      case TriareOpcode.RESIST_COMMIT:
+        this.activeZones = [...this.stagedZones].sort((a, b) => a.index - b.index);
+        return ack;
+      case TriareOpcode.RESIST_CLEAR:
+        this.stagedZones = [];
+        this.activeZones = [];
+        return ack;
+      case TriareOpcode.HOLD_ENGAGE: {
+        if (!this.systemEnabled) return this.nack(opcode, NackReason.NOT_ARMED);
+        const amps = frame.length >= 5 ? view.getFloat32(1, true) : NaN;
+        if (!(amps > 0 && amps <= HOLD_MAX_CURRENT_A) || this.gearRatio < HOLD_MIN_GEAR_RATIO) {
+          return this.nack(opcode, NackReason.INVALID_VALUE);
+        }
+        this.resistMode = ResistMode.HOLD;
+        this.holdCurrentA = amps;
+        return ack;
+      }
+      case TriareOpcode.HOLD_RELEASE:
+        this.resistMode = ResistMode.NONE;
+        this.holdCurrentA = null;
+        return ack;
+      case TriareOpcode.RESIST_TUNE: {
+        if (frame.length < 17) return this.nack(opcode, NackReason.INVALID_VALUE);
+        const gains = [1, 5, 9, 13].map((o) => view.getFloat32(o, true));
+        if (!gains.every((g) => Number.isFinite(g) && g >= 0)) return this.nack(opcode, NackReason.INVALID_VALUE);
+        this.resistGains = gains;
+        return ack;
+      }
+      case TriareOpcode.RESIST_GET: {
+        if (this.activeZones.length === 0) return Uint8Array.of(opcode, 0xff, 0);
+        return this.activeZones.map((z) => {
+          const out = new Uint8Array(17);
+          const v = new DataView(out.buffer);
+          out[0] = opcode;
+          out[1] = z.index;
+          out[2] = this.activeZones.length;
+          v.setFloat32(3, z.startDeg, true);
+          v.setFloat32(7, z.endDeg, true);
+          out[11] = z.type;
+          v.setFloat32(12, z.valuePercent, true);
+          out[16] = z.edgeDeg;
+          return out;
+        });
+      }
+      default:
+        return null;
+    }
+  }
+
+  private handleCommand(frame: Uint8Array): Uint8Array | Uint8Array[] | null {
+    const opcode = frame[0];
+    if (opcode >= TriareOpcode.RESIST_MODE && opcode <= TriareOpcode.RESIST_TUNE) {
+      return this.supportsResistance ? this.handleResistCommand(frame) : null;
+    }
+    switch (opcode) {
+      case TriareOpcode.STREAM:
+        if (!this.supportsStream) return null;
+        this.streaming = frame[1] === 1;
+        return Uint8Array.of(TriareOpcode.ACK, opcode);
       case TriareOpcode.GET_DEVEUI: {
         const resp = new Uint8Array(1 + this.devEui.length);
         resp[0] = opcode;
@@ -107,6 +258,8 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
         return Uint8Array.of(TriareOpcode.ACK, opcode);
       case TriareOpcode.SYSTEM_DISABLE:
         this.systemEnabled = false;
+        this.resistMode = ResistMode.NONE;
+        this.holdCurrentA = null;
         return Uint8Array.of(TriareOpcode.ACK, opcode);
       case TriareOpcode.SET_RPM:
         this.lastTargetErpm = this.readFloat32(frame);
