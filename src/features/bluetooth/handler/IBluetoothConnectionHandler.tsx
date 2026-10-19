@@ -43,4 +43,11 @@ export interface IBluetoothConnectionHandler {
    * @throws If the connection or discovery step fails.
    */
   connectToDevice(deviceId: string): Promise<Device>;
+
+  /**
+   * Closes the BLE link to the given device so the board is free to advertise
+   * and accept a new connection. Never throws: closing a link that is already
+   * gone is not an error.
+   */
+  disconnectDevice(deviceId: string): Promise<void>;
 }

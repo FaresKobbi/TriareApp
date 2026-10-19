@@ -59,6 +59,7 @@ function createMockBluetoothService(): jest.Mocked<IBluetoothConnectionHandler> 
     scanForTriareDevice: jest.fn(),
     stopScan: jest.fn(),
     connectToDevice: jest.fn(),
+    disconnectDevice: jest.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -433,6 +434,8 @@ describe("useBluetoothConnection.connect", () => {
     expect(result.current!.status).toBe("error");
     expect(result.current!.error).toBe("Unable to connect to device");
     expect(result.current!.connectedDevice).toBeNull();
+    // A failed attempt must not leave the board holding a half-open link.
+    expect(mockBluetoothService.disconnectDevice).toHaveBeenCalledWith("dev-1");
   });
 
   it("should clear previous error when connecting to a valid device", async () => {

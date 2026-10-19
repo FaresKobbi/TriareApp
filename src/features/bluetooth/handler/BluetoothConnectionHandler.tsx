@@ -82,13 +82,14 @@ export class BluetoothConnectionHandler implements IBluetoothConnectionHandler {
                 return;
             }
 
+            await this.releaseStaleConnections();
+
             this.bleManager.startDeviceScan(null, null, (error, device) => {
                 if (error) {
                     console.warn("BLE scan error", error.message);
                     onError?.();
                     return;
                 }
-                console.log(device)
                 if (device && this.isTriareDevice(device)) {
                     onDeviceFound(device);
                 }
@@ -116,8 +117,41 @@ export class BluetoothConnectionHandler implements IBluetoothConnectionHandler {
      */
     async connectToDevice(deviceId: string) {
         const device = await this.bleManager.connectToDevice(deviceId);
-        await device.discoverAllServicesAndCharacteristics();
+        try {
+            await device.discoverAllServicesAndCharacteristics();
+        } catch (error) {
+            // A half-initialised link still occupies the board's only
+            // connection slot (it stops advertising), so release it.
+            await this.disconnectDevice(deviceId);
+            throw error;
+        }
         return device;
+    }
+
+    /**
+     * Closes the link to `deviceId`. Safe to call when it is already closed.
+     */
+    async disconnectDevice(deviceId: string): Promise<void> {
+        try {
+            await this.bleManager.cancelDeviceConnection(deviceId);
+        } catch {
+            // Not connected (or already dropped): nothing to release.
+        }
+    }
+
+    /**
+     * Drops TRIARE links left over from an earlier session (a JS reload or a
+     * crash that never called `cancelConnection`). While such a link is alive
+     * the board keeps its single connection slot and stops advertising, so it
+     * never shows up in the scan. Only call this while no session is active.
+     */
+    private async releaseStaleConnections(): Promise<void> {
+        try {
+            const lingering = await this.bleManager.connectedDevices([TRIARE_SERVICE_UUID]);
+            await Promise.all(lingering.map((d) => this.disconnectDevice(d.id)));
+        } catch (error) {
+            console.warn("Could not release stale BLE connections", error);
+        }
     }
 
 }
