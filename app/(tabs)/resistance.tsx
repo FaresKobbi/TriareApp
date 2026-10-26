@@ -9,8 +9,10 @@ import {
   ResistLimit,
   ResistMode,
   TelemetryStatus,
+  ZeroInfoFlag,
 } from "@/src/features/bluetooth/constants/triareProtocol";
 import { useMotorControl } from "@/src/features/bluetooth/hooks/useMotorControl";
+import { usePedalZero } from "@/src/features/bluetooth/hooks/usePedalZero";
 import { useTelemetryStream } from "@/src/features/bluetooth/hooks/useTelemetryStream";
 import { CommandName, SystemState } from "@/src/features/bluetooth/utils/commandFeedback";
 import {
@@ -29,7 +31,7 @@ import { hasTranslation, TranslationKey, useI18n } from "@/src/i18n";
 import { colors, spacing } from "@/src/theme";
 import { useIsFocused } from "@react-navigation/native";
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 const STREAM_MS = 50;
 const MAP_CELLS = 72;
@@ -102,6 +104,11 @@ export default function ResistanceScreen() {
     engageHold,
     releaseHold,
     tuneResist,
+    calibrateCrank,
+    startZeroSearch,
+    cancelZeroSearch,
+    refreshZeroInfo,
+    zeroInfo,
     resistance,
     boardStatus,
     isConnected,
@@ -118,6 +125,12 @@ export default function ResistanceScreen() {
   React.useEffect(() => {
     observeStatus(streamed?.status);
   }, [streamed, observeStatus]);
+
+  // The pedal zero card: reads the index sensor while this tab is on screen.
+  const zero = usePedalZero(
+    { systemState, boardStatus, zeroInfo, enable, calibrateCrank, startZeroSearch, cancelZeroSearch, refreshZeroInfo },
+    isConnected && focused,
+  );
 
   const [picked, setPicked] = useState<PickedMode>("A");
   const [leg, setLeg] = useState<Leg>("left");
@@ -222,6 +235,14 @@ export default function ResistanceScreen() {
     );
   };
 
+  // The motor turns the crank: ask first, then search.
+  const confirmZeroSearch = () => {
+    Alert.alert(t("zero.confirm.title"), t("zero.confirm.body"), [
+      { text: t("zero.confirm.cancel"), style: "cancel" },
+      { text: t("zero.confirm.ok"), onPress: () => void zero.searchWithMotor() },
+    ]);
+  };
+
   const sendGains = async () => {
     const values = [gains.kpSpeed, gains.kiSpeed, gains.kpPos, gains.kdPos].map(parseDecimal);
     if (values.some((v) => v == null || v < 0)) return fail(t("resist.tune.error"));
@@ -241,6 +262,19 @@ export default function ResistanceScreen() {
       </View>
     );
   }
+
+  const zeroFlags = zero.info?.flags ?? 0;
+  const zeroColor = zero.valid ? colors.success : zero.searching || zero.learning ? colors.primary : colors.textMuted;
+  const zeroState = zero.searching
+    ? t("zero.state.searching")
+    : zero.learning
+      ? t("zero.state.learning")
+      : zero.valid
+        ? t("zero.state.valid")
+        : zero.info
+          ? t("zero.state.notValid")
+          : t("zero.state.unknown");
+  const check = (ok: boolean, label: string) => `${ok ? "✓" : "✗"} ${label}`;
 
   const limitText: string[] = [];
   if (frame) {
@@ -320,6 +354,67 @@ export default function ResistanceScreen() {
             ))}
           </View>
           <Text style={styles.muted}>{t("resist.leg.hint")}</Text>
+        </View>
+
+        {/* ---- pedal zero: learn the sensor, then let the motor find it ---- */}
+        <View style={styles.card}>
+          <Text style={styles.section}>{t("zero.title")}</Text>
+          <Text style={styles.muted}>{t("zero.intro")}</Text>
+          <View style={styles.row}>
+            <View style={[styles.dot, { backgroundColor: zeroColor }]} />
+            <Text style={[styles.stateLabel, { color: zeroColor }]}>{zeroState}</Text>
+          </View>
+          {zero.info && (
+            <>
+              <Text style={styles.muted}>
+                {[
+                  check((zeroFlags & ZeroInfoFlag.RATIO_SET) !== 0, t("zero.check.ratio")),
+                  check((zeroFlags & ZeroInfoFlag.INDEX_KNOWN) !== 0, t("zero.check.index")),
+                  check((zeroFlags & ZeroInfoFlag.SAVED) !== 0, t("zero.check.saved")),
+                  check((zeroFlags & ZeroInfoFlag.REV_KNOWN) !== 0, t("zero.check.rev")),
+                ].join("   ")}
+              </Text>
+              <View style={styles.metrics}>
+                <Metric label={t("zero.metric.index")} value={`${zero.info.indexAngleDeg.toFixed(1)}°`} />
+                <Metric label={t("zero.metric.drift")} value={`${zero.info.lastDriftDeg.toFixed(1)}°`} />
+                <Metric label={t("zero.metric.pulses")} value={String(zero.info.pulses)} />
+                <Metric label={t("zero.metric.slips")} value={String(zero.info.slips)} />
+              </View>
+              <Text style={styles.muted}>
+                {t("zero.result.title")}: {codeName("zero.result", zero.info.searchState, t)}
+              </Text>
+            </>
+          )}
+          {zero.problem && <Text style={styles.warn}>{t(`zero.problem.${zero.problem}` as const)}</Text>}
+          {zero.slow && <Text style={styles.warn}>{t("zero.slow")}</Text>}
+          {zero.searching ? (
+            <Button
+              label={t("zero.cancel")}
+              onPress={zero.cancel}
+              loading={loading("zeroCancel")}
+              disabled={pending !== null && pending !== "zeroCancel"}
+              danger
+            />
+          ) : (
+            <>
+              <Text style={styles.muted}>{t("zero.learn.hint")}</Text>
+              <Button
+                label={t("zero.learn")}
+                onPress={zero.learnByHand}
+                loading={loading("calibrateCrank")}
+                disabled={busy}
+                outline
+              />
+              <Text style={styles.muted}>{t("zero.search.hint")}</Text>
+              <Button
+                label={t("zero.search")}
+                onPress={confirmZeroSearch}
+                loading={loading("zeroSearch")}
+                disabled={busy}
+              />
+            </>
+          )}
+          <Button label={t("zero.refresh")} onPress={zero.refresh} disabled={busy} outline />
         </View>
 
         {/* ---- mode picker ---- */}

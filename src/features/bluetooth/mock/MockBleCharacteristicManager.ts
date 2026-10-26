@@ -7,6 +7,8 @@ import {
   RESIST_MAX_ZONES,
   ResistMode,
   TriareOpcode,
+  ZeroInfoFlag,
+  ZeroSearchState,
 } from "../constants/triareProtocol";
 import { IBleCharacteristicManager } from "../IBleCharacteristicManager";
 import { ResistanceData, ResistZone, TelemetryData } from "../protocol/TriareFrames";
@@ -61,6 +63,24 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
   resistGains: number[] | null = null;
   /** Test hook: when false, the physiotherapy commands answer with no response (older firmware). */
   supportsResistance = true;
+
+  /**
+   * Simulated crank zero (index sensor), inspectable by tests. Mirrors the firmware rules: the
+   * learning only arms when a ratio was sent in this boot, and the search needs ratio + index.
+   */
+  supportsZero = true;
+  zeroRatioSet = false;
+  zeroIndexKnown = false;
+  /** Test hook: the firmware measured the reverse index (reverse pulses check the zero). */
+  zeroRevKnown = false;
+  zeroLearning = false;
+  zeroValid = false;
+  zeroSearching = false;
+  zeroSearchState: number = ZeroSearchState.NONE;
+  zeroIndexAngleDeg = 0;
+  zeroLastDriftDeg = 0;
+  zeroPulses = 0;
+  zeroSlips = 0;
 
   private notifyListeners = new Set<(value: string) => void>();
 
@@ -141,6 +161,41 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
     Promise.resolve().then(() => {
       this.notifyListeners.forEach((listener) => listener(b64));
     });
+  }
+
+  /**
+   * Test hook: the index sensor fires. A learning in progress learns the index; a search in
+   * progress ends as FOUND and the status byte changes, as on the board.
+   */
+  fireZeroSensor(angleDeg = 0): void {
+    this.zeroPulses += 1;
+    this.zeroIndexAngleDeg = angleDeg;
+    if (this.zeroLearning) {
+      this.zeroLearning = false;
+      this.zeroIndexKnown = true;
+    }
+    if (this.zeroSearching) {
+      this.zeroSearching = false;
+      this.zeroSearchState = ZeroSearchState.FOUND;
+    }
+    this.zeroValid = true;
+  }
+
+  /** Test hook: the search ends without finding the sensor (`ZeroSearchState.TIMEOUT`, etc.). */
+  endZeroSearch(state: number): void {
+    this.zeroSearching = false;
+    this.zeroSearchState = state;
+  }
+
+  private zeroFlags(): number {
+    return (
+      (this.zeroIndexKnown ? ZeroInfoFlag.INDEX_KNOWN : 0) |
+      (this.zeroValid ? ZeroInfoFlag.VALID : 0) |
+      (this.zeroLearning ? ZeroInfoFlag.LEARNING : 0) |
+      (this.zeroSearching ? ZeroInfoFlag.SEARCHING : 0) |
+      (this.zeroRatioSet ? ZeroInfoFlag.RATIO_SET : 0) |
+      (this.zeroRevKnown ? ZeroInfoFlag.REV_KNOWN : 0)
+    );
   }
 
   private nack(opcode: number, reason: number): Uint8Array {
@@ -258,6 +313,7 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
         return Uint8Array.of(TriareOpcode.ACK, opcode);
       case TriareOpcode.SYSTEM_DISABLE:
         this.systemEnabled = false;
+        if (this.zeroSearching) this.endZeroSearch(ZeroSearchState.ABORTED);
         this.resistMode = ResistMode.NONE;
         this.holdCurrentA = null;
         return Uint8Array.of(TriareOpcode.ACK, opcode);
@@ -273,6 +329,12 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
         return Uint8Array.of(TriareOpcode.ACK, opcode);
       case TriareOpcode.CALIBRATE_CRANK:
         this.telemetry = { ...this.telemetry, crankAngleDeg: 0 };
+        // Always ACKs, but the learning only arms when the ratio was sent in this boot.
+        if (this.supportsZero && this.zeroRatioSet) {
+          this.zeroLearning = true;
+          this.zeroIndexKnown = false;
+          this.zeroValid = false;
+        }
         return Uint8Array.of(TriareOpcode.ACK, opcode);
       case TriareOpcode.SET_GEAR_RATIO: {
         const ratio = this.readFloat32(frame);
@@ -280,9 +342,43 @@ export class MockBleCharacteristicManager implements IBleCharacteristicManager {
           // Mirrors real firmware: invalid value gets no response at all.
           return null;
         }
-        this.gearRatio = ratio;
-        this.telemetry = { ...this.telemetry, crankAngleDeg: 0 };
+        // Same-ratio SET_GEAR_RATIO is a no-op on the board: it does not reset the zero.
+        if (ratio !== this.gearRatio || !this.zeroRatioSet) {
+          this.gearRatio = ratio;
+          this.zeroRatioSet = true;
+          this.zeroValid = false;
+          this.zeroRevKnown = false;
+          this.telemetry = { ...this.telemetry, crankAngleDeg: 0 };
+        }
         return Uint8Array.of(TriareOpcode.ACK, opcode);
+      }
+
+      case TriareOpcode.ZERO_SEARCH: {
+        if (!this.supportsZero) return null;
+        if (frame[1] === 0) {
+          if (this.zeroSearching) this.endZeroSearch(ZeroSearchState.ABORTED);
+          return Uint8Array.of(TriareOpcode.ACK, opcode);
+        }
+        if (!this.systemEnabled) return this.nack(opcode, NackReason.NOT_ARMED);
+        if (!this.zeroRatioSet || !this.zeroIndexKnown) return this.nack(opcode, NackReason.ZERO_SETUP);
+        this.zeroSearching = true;
+        this.zeroValid = false;
+        this.zeroSearchState = ZeroSearchState.RUNNING;
+        return Uint8Array.of(TriareOpcode.ACK, opcode);
+      }
+
+      case TriareOpcode.ZERO_GET: {
+        if (!this.supportsZero) return null;
+        const resp = new Uint8Array(15);
+        const view = new DataView(resp.buffer);
+        resp[0] = opcode;
+        resp[1] = this.zeroFlags();
+        resp[2] = this.zeroSearchState;
+        view.setFloat32(3, this.zeroIndexAngleDeg, true);
+        view.setFloat32(7, this.zeroLastDriftDeg, true);
+        view.setUint16(11, this.zeroPulses, true);
+        view.setUint16(13, this.zeroSlips, true);
+        return resp;
       }
 
       case TriareOpcode.REQ_TELEMETRY: {

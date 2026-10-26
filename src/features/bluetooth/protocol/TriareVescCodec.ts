@@ -13,6 +13,7 @@ import {
   TELEMETRY_FRAME_LENGTH,
   TELEMETRY_STATUS_OFFSET,
   TriareOpcode,
+  ZERO_INFO_LENGTH,
 } from "../constants/triareProtocol";
 import { CommandCodec, ResistGains, ResistZoneInput } from "./CommandCodec";
 import { DecodedFrame } from "./TriareFrames";
@@ -155,6 +156,14 @@ export class TriareVescCodec implements CommandCodec {
     return frame;
   }
 
+  encodeZeroSearch(start: boolean): Uint8Array {
+    return Uint8Array.of(TriareOpcode.ZERO_SEARCH, start ? 1 : 0);
+  }
+
+  encodeZeroGet(): Uint8Array {
+    return opcodeOnly(TriareOpcode.ZERO_GET);
+  }
+
   encodeStream(enable: boolean): Uint8Array {
     const frame = new Uint8Array(2);
     frame[0] = TriareOpcode.STREAM;
@@ -222,6 +231,21 @@ export class TriareVescCodec implements CommandCodec {
           type: frame[11],
           valuePercent: view.getFloat32(12, true),
           edgeDeg: frame[16],
+        },
+      };
+    }
+
+    if (opcode === TriareOpcode.ZERO_GET && frame.length >= ZERO_INFO_LENGTH) {
+      const view = new DataView(frame.buffer, frame.byteOffset, frame.byteLength);
+      return {
+        kind: "zero",
+        zero: {
+          flags: frame[1],
+          searchState: frame[2],
+          indexAngleDeg: view.getFloat32(3, true),
+          lastDriftDeg: view.getFloat32(7, true),
+          pulses: view.getUint16(11, true),
+          slips: view.getUint16(13, true),
         },
       };
     }

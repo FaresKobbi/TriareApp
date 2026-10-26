@@ -145,6 +145,50 @@ export const en = {
   "resist.tune.done": "Gains updated",
   "resist.tune.error": "Enter four numbers, 0 or more.",
 
+  // ---- pedal zero (resistance screen) -------------------------------------
+  "zero.title": "Pedal zero",
+  "zero.intro":
+    "The sensor gives the crank a fixed zero. Send the gear ratio above, mark the zero once at installation (left pedal up), then the board finds it again by itself after every boot.",
+  "zero.state.valid": "Zero confirmed by the sensor",
+  "zero.state.notValid": "Zero not confirmed yet",
+  "zero.state.searching": "The motor is turning the pedals…",
+  "zero.state.learning": "Turn the crank, in the pedalling direction, until the magnet passes the sensor.",
+  "zero.state.unknown": "Reading the sensor state…",
+  "zero.check.ratio": "Gear ratio sent",
+  "zero.check.index": "Zero marked",
+  "zero.check.saved": "Saved on the board",
+  "zero.check.rev": "Reverse measured",
+  "zero.metric.index": "Sensor angle",
+  "zero.metric.drift": "Last drift",
+  "zero.metric.pulses": "Pulses",
+  "zero.metric.slips": "Slips",
+  "zero.result.title": "Last search",
+  "zero.result.0": "No search yet",
+  "zero.result.1": "Searching…",
+  "zero.result.2": "Found: the sensor fired",
+  "zero.result.3": "Not found: about 1.25 turns without a pulse (sensor off or misaligned)",
+  "zero.result.4": "The crank did not move (foot on the pedal or blocked)",
+  "zero.result.5": "The crank moved against the direction the sensor was learned in",
+  "zero.result.6": "Stopped before finding it",
+  "zero.result.7": "The result is out of date",
+  "zero.learn": "Mark zero (left pedal up)",
+  "zero.learn.hint":
+    "Put the left pedal up, tap, then turn the crank in the pedalling direction until the magnet passes the sensor. The crank must be moving: a pulse with the crank stopped is ignored.",
+  "zero.search": "Calibrate pedal",
+  "zero.search.hint": "The motor turns the crank slowly until the sensor fires. Keep your feet off the pedals.",
+  "zero.cancel": "Cancel search",
+  "zero.refresh": "Read state",
+  "zero.confirm.title": "Move the pedals?",
+  "zero.confirm.body":
+    "The motor will turn the crank slowly (about 8 rpm) for up to 11 s. Keep feet and hands away from the pedals. Cancel at any time.",
+  "zero.confirm.ok": "Start",
+  "zero.confirm.cancel": "Not now",
+  "zero.problem.noRatio": "Send the gear ratio first (Setup above).",
+  "zero.problem.noIndex": "Mark the zero first: left pedal up, then turn the crank.",
+  "zero.slow": "The search is taking longer than the board allows. Cancel it and check the sensor.",
+  "zero.searchStarted": "Searching for the zero…",
+  "zero.searchCancelled": "Zero search cancelled",
+
   // ---- command results (toasts) ------------------------------------------
   "motor.commandFailed": "BLE command failed",
   "motor.armed": "System armed",
@@ -177,8 +221,12 @@ export const en = {
   "feedback.invalid.detail": "Check the value and try again.",
   "feedback.invalid.hold":
     "The hold needs a current from 0.1 to 3 A and a gear ratio of 3 or more.",
+  "feedback.invalid.zeroSearch":
+    "The zero search needs an armed system, a gear ratio and a learned sensor, and the motor must be stopped.",
   "feedback.noRegen.title": "Brake is not available",
   "feedback.noRegen.detail": "There is nowhere to send the braking energy yet.",
+  "feedback.zeroSetup.title": "The zero is not set up",
+  "feedback.zeroSetup.detail": "Send the gear ratio and mark the zero first, then search again.",
   "feedback.rejected.title": "Command rejected by the firmware",
   "feedback.rejected.detail": "Reason code 0x{code}.",
   "feedback.rangeError": "Invalid value",
@@ -191,6 +239,8 @@ export const en = {
     "The ratio may be invalid (it must be greater than 0), or the link is unstable.",
   "feedback.timeout.stop":
     "The command may or may not have been applied. Check that the motor is stopped and press Emergency (B3) if it is not.",
+  "feedback.timeout.zero":
+    "The board did not answer. It may be disarmed or running older firmware without the zero search.",
   "feedback.timeout.default": "Check the connection and try again.",
   "feedback.timeout.resist":
     "The board did not answer. It may be disarmed or running older firmware without this mode.",

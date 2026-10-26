@@ -141,6 +141,50 @@ export const ptBR: Record<TranslationKey, string> = {
   "resist.tune.done": "Ganhos atualizados",
   "resist.tune.error": "Digite quatro números, 0 ou mais.",
 
+  // ---- zero do pedal (tela de resistência) ---------------------------------
+  "zero.title": "Zero do pedal",
+  "zero.intro":
+    "O sensor dá ao pedivela um zero fixo. Envie a relação de transmissão acima, marque o zero uma vez na instalação (pedal esquerdo para cima) e depois a placa o encontra sozinha a cada boot.",
+  "zero.state.valid": "Zero confirmado pelo sensor",
+  "zero.state.notValid": "Zero ainda não confirmado",
+  "zero.state.searching": "O motor está girando os pedais…",
+  "zero.state.learning": "Gire o pedivela, no sentido de pedalar, até o ímã passar pelo sensor.",
+  "zero.state.unknown": "Lendo o estado do sensor…",
+  "zero.check.ratio": "Relação enviada",
+  "zero.check.index": "Zero marcado",
+  "zero.check.saved": "Gravado na placa",
+  "zero.check.rev": "Ré medida",
+  "zero.metric.index": "Ângulo do sensor",
+  "zero.metric.drift": "Último desvio",
+  "zero.metric.pulses": "Pulsos",
+  "zero.metric.slips": "Escorregamentos",
+  "zero.result.title": "Última busca",
+  "zero.result.0": "Nenhuma busca ainda",
+  "zero.result.1": "Procurando…",
+  "zero.result.2": "Achou: o sensor disparou",
+  "zero.result.3": "Não achou: cerca de 1,25 volta sem pulso (sensor desligado ou desalinhado)",
+  "zero.result.4": "O pedivela não se moveu (pé no pedal ou travado)",
+  "zero.result.5": "O pedivela andou contra o sentido em que o sensor foi aprendido",
+  "zero.result.6": "Interrompida antes de achar",
+  "zero.result.7": "O resultado está desatualizado",
+  "zero.learn": "Marcar zero (pedal esquerdo para cima)",
+  "zero.learn.hint":
+    "Deixe o pedal esquerdo para cima, toque e gire o pedivela no sentido de pedalar até o ímã passar pelo sensor. O pedivela precisa estar em movimento: pulso com ele parado é ignorado.",
+  "zero.search": "Calibrar pedal",
+  "zero.search.hint": "O motor gira o pedivela devagar até o sensor disparar. Mantenha os pés longe dos pedais.",
+  "zero.cancel": "Cancelar busca",
+  "zero.refresh": "Ler estado",
+  "zero.confirm.title": "Mover os pedais?",
+  "zero.confirm.body":
+    "O motor vai girar o pedivela devagar (cerca de 8 rpm) por até 11 s. Mantenha pés e mãos longe dos pedais. Dá para cancelar a qualquer momento.",
+  "zero.confirm.ok": "Iniciar",
+  "zero.confirm.cancel": "Agora não",
+  "zero.problem.noRatio": "Envie a relação de transmissão primeiro (Configuração acima).",
+  "zero.problem.noIndex": "Marque o zero primeiro: pedal esquerdo para cima e gire o pedivela.",
+  "zero.slow": "A busca está demorando mais do que a placa permite. Cancele e confira o sensor.",
+  "zero.searchStarted": "Procurando o zero…",
+  "zero.searchCancelled": "Busca do zero cancelada",
+
   // ---- command results (toasts) ------------------------------------------
   "motor.commandFailed": "Falha no comando BLE",
   "motor.armed": "Sistema armado",
@@ -175,8 +219,12 @@ export const ptBR: Record<TranslationKey, string> = {
   "feedback.invalid.detail": "Confira o valor e tente de novo.",
   "feedback.invalid.hold":
     "A retenção precisa de uma corrente de 0,1 a 3 A e de uma relação de transmissão de 3 ou mais.",
+  "feedback.invalid.zeroSearch":
+    "A busca do zero precisa do sistema armado, de uma relação de transmissão e do sensor aprendido, e o motor deve estar parado.",
   "feedback.noRegen.title": "O freio não está disponível",
   "feedback.noRegen.detail": "Ainda não há para onde enviar a energia da frenagem.",
+  "feedback.zeroSetup.title": "O zero não está configurado",
+  "feedback.zeroSetup.detail": "Envie a relação de transmissão e marque o zero primeiro; depois procure de novo.",
   "feedback.rejected.title": "Comando rejeitado pelo firmware",
   "feedback.rejected.detail": "Código do motivo: 0x{code}.",
   "feedback.rangeError": "Valor inválido",
@@ -189,6 +237,8 @@ export const ptBR: Record<TranslationKey, string> = {
     "A relação pode ser inválida (deve ser maior que 0) ou o enlace está instável.",
   "feedback.timeout.stop":
     "O comando pode ou não ter sido aplicado. Confirme que o motor parou e aperte Emergência (B3) se não parou.",
+  "feedback.timeout.zero":
+    "A placa não respondeu. Pode estar desarmada ou com um firmware antigo, sem a busca do zero.",
   "feedback.timeout.default": "Verifique a conexão e tente de novo.",
   "feedback.timeout.resist":
     "A placa não respondeu. Pode estar desarmada ou com um firmware antigo, sem este modo.",

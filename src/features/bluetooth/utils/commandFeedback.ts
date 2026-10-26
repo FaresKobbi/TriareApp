@@ -30,6 +30,8 @@ export type CommandName =
   | "holdEngage"
   | "holdRelease"
   | "resistTune"
+  | "zeroSearch"
+  | "zeroCancel"
   | "telemetry";
 
 export type FeedbackTone = "success" | "error" | "info";
@@ -110,7 +112,15 @@ function rejectionFeedback(command: CommandName, reason: number): ErrorOutcome {
         detail:
           command === "holdEngage"
             ? t("feedback.invalid.hold")
-            : t("feedback.invalid.detail"),
+            : command === "zeroSearch"
+              ? t("feedback.invalid.zeroSearch")
+              : t("feedback.invalid.detail"),
+      };
+    case NackReason.ZERO_SETUP:
+      return {
+        tone: "error",
+        title: t("feedback.zeroSetup.title"),
+        detail: t("feedback.zeroSetup.detail"),
       };
     case NackReason.NO_REGEN_PATH:
       return {
@@ -159,9 +169,16 @@ function timeoutFeedback(command: CommandName): ErrorOutcome {
         detail: t("feedback.timeout.resist"),
         action: "enable",
       };
+    case "zeroSearch":
+      return {
+        tone: "error",
+        title: t("feedback.timeout.title"),
+        detail: t("feedback.timeout.zero"),
+      };
     case "stop":
     case "disable":
     case "holdRelease":
+    case "zeroCancel":
       return {
         tone: "error",
         title: t("feedback.timeout.title"),

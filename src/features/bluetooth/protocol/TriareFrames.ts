@@ -63,6 +63,22 @@ export type ResistZone = {
   edgeDeg: number;
 };
 
+/** State of the crank zero / index sensor, as answered to `ZERO_GET`. */
+export type ZeroInfo = {
+  /** Bitfield of `ZeroInfoFlag`. */
+  flags: number;
+  /** A `ZeroSearchState` byte: outcome of the last search (0 before any). */
+  searchState: number;
+  /** Crank angle at which the sensor fires (degrees, in the pedal reference). Meaningful when the index is known. */
+  indexAngleDeg: number;
+  /** Deviation of the last pulse the board checked, degrees. */
+  lastDriftDeg: number;
+  /** Sensor pulses accepted since boot. */
+  pulses: number;
+  /** Pulses that disagreed with the tachometer by more than 10° (the crank angle slipped). */
+  slips: number;
+};
+
 /**
  * Discriminated union of every frame shape the firmware produces.
  *
@@ -84,4 +100,6 @@ export type DecodedFrame =
   | { kind: "resistance"; resistance: ResistanceData }
   /** One reply to RESIST_GET. `zone` is null (and `total` 0) when the board has no zones. */
   | { kind: "resistZone"; zone: ResistZone | null; total: number }
+  /** Reply to ZERO_GET. */
+  | { kind: "zero"; zero: ZeroInfo }
   | { kind: "unrecognized"; raw: Uint8Array };

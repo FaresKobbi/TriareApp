@@ -258,6 +258,52 @@ export const RESIST_ZONE_REPLY_LENGTH = 17;
 /** `RESIST_GET` index byte meaning "no zones". */
 export const RESIST_NO_ZONES_INDEX = 0xff;
 
+/** `ZERO_GET` reply: opcode, flags u8, search state u8, f32 index angle, f32 last drift, u16 pulses, u16 slips. */
+export const ZERO_INFO_LENGTH = 15;
+
+/** Bits of the `ZERO_GET` flags byte. Keep equal to TRIARE_ZERO_INFO_* in the firmware. */
+export const ZeroInfoFlag = {
+  /** The sensor index angle is known (learned by hand or read from flash). */
+  INDEX_KNOWN: 0x01,
+  /** The sensor confirmed the zero since the last boot / ratio change. */
+  VALID: 0x02,
+  /** Waiting for the sensor pulse to learn the index (crank turned by hand). */
+  LEARNING: 0x04,
+  /** The motor is turning the crank slowly to find the index pulse. */
+  SEARCHING: 0x08,
+  /** A gear ratio was sent in this boot. */
+  RATIO_SET: 0x10,
+  /** The index was written to / read from flash successfully. */
+  SAVED: 0x20,
+  /** The reverse-direction index was measured this boot: reverse pulses now check the zero too. */
+  REV_KNOWN: 0x40,
+} as const;
+
+/** Outcome of the last zero search (`ZERO_GET` search-state byte). Keep equal to triare_zero_search_state_t. */
+export const ZeroSearchState = {
+  /** No search since boot. */
+  NONE: 0,
+  RUNNING: 1,
+  /** The sensor fired: the zero is valid. */
+  FOUND: 2,
+  /** About 1.25 turns without a pulse (sensor off or misaligned). */
+  TIMEOUT: 3,
+  /** The crank did not move (foot on the pedal, blocked). */
+  STALLED: 4,
+  /** The crank moved against the direction the index was learned in. */
+  WRONG_DIR: 5,
+  /** Stop, disarm, fault, emergency or another command ended it. */
+  ABORTED: 6,
+  /** The motor controller stopped answering. */
+  STALE: 7,
+} as const;
+
+/**
+ * Longest a zero search should take: the board gives up after 1.25 turns at 8 rpm plus a
+ * margin (about 11.5 s). The app does not cut it short; it only warns when it lasts longer.
+ */
+export const ZERO_SEARCH_EXPECTED_MAX_MS = 20000;
+
 export const DUTY_MIN = -1.0;
 export const DUTY_MAX = 1.0;
 

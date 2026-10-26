@@ -78,6 +78,15 @@ export interface CommandCodec {
   /** @throws RangeError for a non-finite or negative gain. */
   encodeResistTune(gains: ResistGains): Uint8Array;
 
+  /**
+   * @param start `true` = search the crank zero by turning the motor slowly until the index
+   * sensor fires; `false` = cancel a search in progress. The app must ask the user to confirm
+   * before sending `true`: the crank turns.
+   */
+  encodeZeroSearch(start: boolean): Uint8Array;
+  /** Asks for the state of the crank zero / index sensor (reply: a `zero` frame). */
+  encodeZeroGet(): Uint8Array;
+
   /** Never throws on malformed input — returns an `unrecognized` frame instead. */
   decode(frame: Uint8Array): DecodedFrame;
 }

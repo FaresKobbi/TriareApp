@@ -7,7 +7,7 @@ import {
 import { ACK_TIMEOUT_MS, nackReasonName } from "../constants/triareProtocol";
 import { IBleCharacteristicManager } from "../IBleCharacteristicManager";
 import { CommandCodec, ResistGains, ResistZoneInput } from "../protocol/CommandCodec";
-import { DecodedFrame, ResistanceData, ResistZone, TelemetryData } from "../protocol/TriareFrames";
+import { DecodedFrame, ResistanceData, ResistZone, TelemetryData, ZeroInfo } from "../protocol/TriareFrames";
 import { base64ToBytes, bytesToBase64 } from "../utils/base64";
 
 /**
@@ -249,6 +249,33 @@ export class TriareCommandService {
   /** Adjusts the controller gains (bench tuning). The board refuses unsafe values. */
   async tuneResist(gains: ResistGains): Promise<void> {
     await this.sendExpectingAck(this.codec.encodeResistTune(gains));
+  }
+
+  // --- Crank zero (index sensor) --------------------------------------------
+
+  /**
+   * Starts the zero search: the board turns the motor slowly, in the direction the index was
+   * learned in, until the sensor fires. Needs the system armed, an index learned and the gear
+   * ratio sent (otherwise CommandRejectedError, reason ZERO_SETUP). The caller MUST have the
+   * user's confirmation first: the crank turns, feet must be off the pedals.
+   */
+  async startZeroSearch(): Promise<void> {
+    await this.sendExpectingAck(this.codec.encodeZeroSearch(true));
+  }
+
+  /** Cancels a zero search in progress (the motor is released). Harmless when none is running. */
+  async cancelZeroSearch(): Promise<void> {
+    await this.sendExpectingAck(this.codec.encodeZeroSearch(false));
+  }
+
+  /** Reads the state of the crank zero / index sensor. */
+  async getZeroInfo(): Promise<ZeroInfo> {
+    const request = this.codec.encodeZeroGet();
+    const frame = await this.send(request);
+    if (frame.kind !== "zero") {
+      throw new UnexpectedFrameError(request[0], frame);
+    }
+    return frame.zero;
   }
 
   async requestTelemetry(): Promise<TelemetryData> {

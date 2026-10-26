@@ -2,7 +2,7 @@ import { t, tp } from "@/src/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ResistMode, TelemetryStatus } from "../constants/triareProtocol";
 import { ResistGains, ResistZoneInput } from "../protocol/CommandCodec";
-import { ResistanceData, ResistZone, TelemetryData } from "../protocol/TriareFrames";
+import { ResistanceData, ResistZone, TelemetryData, ZeroInfo } from "../protocol/TriareFrames";
 import { BleSession } from "../services/BleSession";
 import { TriareCommandService } from "../services/TriareCommandService";
 import { erpmToMotorRpm } from "../utils/motorUnits";
@@ -49,6 +49,7 @@ export function useMotorControl(session: BleSession | null) {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [resistance, setResistance] = useState<ResistanceData | null>(null);
   const [boardStatus, setBoardStatus] = useState<number | null>(null);
+  const [zeroInfo, setZeroInfo] = useState<ZeroInfo | null>(null);
 
   // Mirrors `systemState` so command callbacks read the latest value without
   // being re-created (and re-rendering consumers) on every state change.
@@ -143,6 +144,7 @@ export function useMotorControl(session: BleSession | null) {
     setTelemetry(null);
     setResistance(null);
     setBoardStatus(null);
+    setZeroInfo(null);
     setError(null);
     setFeedback(null);
     setPending(null);
@@ -322,6 +324,43 @@ export function useMotorControl(session: BleSession | null) {
     [run],
   );
 
+  /**
+   * Starts the crank zero search: the motor turns the crank slowly until the index sensor fires.
+   * The caller MUST have asked the user to confirm first (feet off the pedals). Needs the system
+   * armed; refused with ZERO_SETUP when no index was learned or no ratio was sent.
+   */
+  const startZeroSearch = useCallback(
+    () =>
+      run("zeroSearch", (c) => c.startZeroSearch(), {
+        success: t("zero.searchStarted"),
+        needsArmed: true,
+      }),
+    [run],
+  );
+
+  /** Cancels a zero search in progress; the motor is released. */
+  const cancelZeroSearch = useCallback(
+    () => run("zeroCancel", (c) => c.cancelZeroSearch(), { success: t("zero.searchCancelled") }),
+    [run],
+  );
+
+  /**
+   * Reads the crank zero state into `zeroInfo`. Silent on purpose (no busy state, no toast, no
+   * error): the zero card polls it while a search or a learning is running, and a missed answer
+   * only means "try again". Resolves with the sample, or null when it could not be read
+   * (no session, firmware without the command, timeout).
+   */
+  const refreshZeroInfo = useCallback(async (): Promise<ZeroInfo | null> => {
+    if (!session) return null;
+    try {
+      const info = await session.commands.getZeroInfo();
+      setZeroInfo(info);
+      return info;
+    } catch {
+      return null;
+    }
+  }, [session]);
+
   /** Fetches one telemetry sample and stores it in `telemetry`. */
   const requestTelemetry = useCallback(
     () =>
@@ -347,6 +386,11 @@ export function useMotorControl(session: BleSession | null) {
     engageHold,
     releaseHold,
     tuneResist,
+    startZeroSearch,
+    cancelZeroSearch,
+    refreshZeroInfo,
+    /** Last `ZERO_GET` answer of this session, or null. */
+    zeroInfo,
     requestTelemetry,
     /** Last resistance sample pushed by the board in this session, or null. */
     resistance,

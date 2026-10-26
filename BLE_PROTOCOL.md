@@ -194,12 +194,12 @@ Status byte (telemetry byte 22, stream byte 26, `0x1E` events): `0x20` = **ZERO_
 (confirmed by the sensor since the last boot/ratio change), `0x40` = **ZERO_SEARCH** (motor turning).
 
 `ZERO_GET` flags: `0x01` index known, `0x02` zero valid, `0x04` learning (waiting for the pulse),
-`0x08` searching, `0x10` ratio set this boot, `0x20` index saved in flash.
+`0x08` searching, `0x10` ratio set this boot, `0x20` index saved in flash, `0x40` reverse index measured this boot (reverse pulses check the zero too).
 `searchState`: `0` none, `1` running, `2` found, `3` timeout (≈1.25 turn, no pulse), `4` stalled
 (crank did not move: foot on the pedal), `5` wrong direction, `6` aborted (stop/disarm/emergency/other
 command), `7` telemetry went stale.
 
-**Suggested app flow (not implemented in the app yet):**
+**App flow (implemented as the "Pedal zero" card on the Resistance tab; the numbered steps below are the intended full flow, and the card covers steps 2–4 by hand, without automatic prompts on connect):**
 1. On connect: send `SET_GEAR_RATIO`, then `ZERO_GET`.
 2. If `ZERO_VALID` is clear and *index known*: show "The pedal zero must be confirmed. The crank will
    turn slowly. Take your feet off the pedals." → on **Confirm**: `SYSTEM_ENABLE` (if needed) → `ZERO_SEARCH(1)`;

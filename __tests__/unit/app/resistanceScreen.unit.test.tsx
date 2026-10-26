@@ -105,7 +105,7 @@ describe("Resistance screen", () => {
     await press(r.root, "Example");
     await press(r.root, "Start");
 
-    const sequence = opcodes().filter((op) => op !== 0x1c);
+    const sequence = opcodes().filter((op) => op !== 0x1c && op !== 0x2a);
     expect(sequence).toEqual([0x10, 0x23, 0x21, 0x22, 0x20, 0x12]);
     expect(firmware.activeZones).toHaveLength(1);
     expect(firmware.activeZones[0]).toMatchObject({ startDeg: 60, endDeg: 150, valuePercent: 0 });
