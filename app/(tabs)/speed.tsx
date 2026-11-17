@@ -1,6 +1,7 @@
 import { CommandToast } from "@/src/components/ui/CommandToast";
 import { TelemetryPanel } from "@/src/components/telemetry/TelemetryPanel";
 import { PedalDial } from "@/src/components/ui/PedalDial";
+import { PowerSourceNotice } from "@/src/components/ui/PowerSourceNotice";
 import {
   useBleSession,
   useBleSessionContext,
@@ -104,6 +105,7 @@ export default function SpeedScreen() {
     telemetry,
     isConnected,
     systemState,
+    boardStatus,
     pending,
     feedback,
     dismissFeedback,
@@ -277,6 +279,7 @@ export default function SpeedScreen() {
   return (
     <View style={styles.root}>
       <ScrollView contentContainerStyle={styles.container}>
+        <PowerSourceNotice status={boardStatus} />
         <Text style={styles.section}>{t("speed.system")}</Text>
         <View style={styles.stateRow}>
           <View style={[styles.stateDot, { backgroundColor: badge.color }]} />

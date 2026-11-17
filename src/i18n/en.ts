@@ -207,6 +207,10 @@ export const en = {
   "motor.selfDisarmedDetail": "Check the controller fault in the telemetry, then tap Enable.",
   "toast.enable": "Enable",
 
+  "power.onBattery.title": "Running on battery",
+  "power.onBattery.detail":
+    "The power supply is off or cannot keep up, so the battery is feeding the motor and will drain. Check the mains and the supply before continuing.",
+
   "feedback.disarmed.title": "System is disarmed",
   "feedback.disarmed.detail": "Tap Enable first, then send the speed.",
   "feedback.emergency.title": "Emergency stop is active",

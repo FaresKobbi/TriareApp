@@ -205,6 +205,10 @@ export const ptBR: Record<TranslationKey, string> = {
     "Veja a falha do controlador na telemetria e depois toque em Habilitar.",
   "toast.enable": "Habilitar",
 
+  "power.onBattery.title": "Funcionando na bateria",
+  "power.onBattery.detail":
+    "A fonte está desligada ou não dá conta, então a bateria está alimentando o motor e vai descarregar. Confira a tomada e a fonte antes de continuar.",
+
   "feedback.disarmed.title": "O sistema está desarmado",
   "feedback.disarmed.detail": "Toque em Habilitar primeiro e depois envie a velocidade.",
   "feedback.emergency.title": "Parada de emergência ativa",

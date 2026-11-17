@@ -2,6 +2,7 @@ import { EffortMap } from "@/src/components/resistance/EffortMap";
 import { ZoneEditor, ZoneFields } from "@/src/components/resistance/ZoneEditor";
 import { CommandToast } from "@/src/components/ui/CommandToast";
 import { PedalDial } from "@/src/components/ui/PedalDial";
+import { PowerSourceNotice } from "@/src/components/ui/PowerSourceNotice";
 import { useBleSession } from "@/src/features/bluetooth/context/BleSessionContext";
 import {
   HOLD_MAX_CURRENT_A,
@@ -288,6 +289,7 @@ export default function ResistanceScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>{t("resistance.title")}</Text>
         <Text style={styles.bench}>{t("resist.bench")}</Text>
+        <PowerSourceNotice status={boardStatus} />
 
         {/* ---- what the board is doing; Release is always here ---- */}
         <View style={styles.card}>

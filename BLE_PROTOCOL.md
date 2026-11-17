@@ -156,6 +156,7 @@ Sent right after each `0x1D` stream frame while any physiotherapy mode is active
 | NACK `5` | `NO_REGEN_PATH` — brake requested but there is no way to return energy |
 | status `0x08` | physiotherapy mode active |
 | status `0x10` | current is being limited (thermal or yield) |
+| status `0x80` | **ON_BATTERY** — the bus is held by the battery, not by the power supply. The firmware decides it from the bus voltage (`v_in`) with hysteresis (as read by the VESC, which is ~0.5 V below a multimeter: below 26.0 V for 3 s to enter, above 26.3 V for 3 s to leave). **Only meaningful with the adjustable ~27.2 V supply** (VESC reads ~26.7 V on mains, ~25.6 V on battery); the detection is off by default (`TRIARE_BATT_DETECT=0`), so with the fixed 24 V supply the bit is never set and a clear bit does not prove the supply is present |
 
 ### Safety behaviour (summary)
 

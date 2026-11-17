@@ -201,6 +201,12 @@ export const TelemetryStatus = {
   ZERO_VALID: 0x20,
   /** The firmware is turning the motor slowly to find the index pulse. */
   ZERO_SEARCH: 0x40,
+  /**
+   * The bus is held by the battery, not by the power supply (supply off, or unable to keep up).
+   * The board decides it from the bus voltage with hysteresis and a time filter; firmware built
+   * without that detection never sets it, so a clear bit does not prove the supply is present.
+   */
+  ON_BATTERY: 0x80,
 } as const;
 
 /** Physiotherapy modes (`RESIST_MODE` payload and field of `RESIST_FRAME`). Keep equal to the firmware. */
